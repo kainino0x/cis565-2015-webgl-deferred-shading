@@ -1,5 +1,5 @@
 (function() {
-    "use strict";
+    'use strict';
     var renderer, scene, camera, controls, stats;
 
     var init = function() {
@@ -21,30 +21,37 @@
             0.1,            // Near plane
             10000           // Far plane
         );
-        camera.position.set(-15, 10, 10);
-        camera.lookAt(scene.position);
+        camera.position.set(-8, 1.5, -1);
 
-        controls = new THREE.TrackballControls(camera, renderer.domElement);
-        controls.target.set(0, 0, 0);
-        controls.rotateSpeed = 2.0;
-        controls.zoomSpeed = 1.2;
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.enableZoom = true;
+        controls.target.set(0, 3.2, 0);
+        controls.rotateSpeed = 0.3;
+        controls.zoomSpeed = 1.0;
         controls.panSpeed = 0.8;
-        controls.noZoom = false;
-        controls.noPan = false;
-        controls.staticMoving = true;
-        controls.dynamicDampingFactor = 0.3;
-        controls.addEventListener('change', render);
 
-        var geometry = new THREE.BoxGeometry(5, 5, 5);
-        var material = new THREE.MeshLambertMaterial({ color: 0xFF0000 });
-        var mesh = new THREE.Mesh(geometry, material);
-        scene.add(mesh);
-
-        var light = new THREE.PointLight(0xFFFF00);
-        light.position.set(10, 0, 10);
+        var light = new THREE.PointLight(0xFFFFFF);
         scene.add(light);
 
-        renderer.setClearColor(0xdddddd, 1);
+        renderer.setClearColor(0xAABBFF, 1);
+
+        // CHECKITOUT: Load textures and mesh
+        var texAlbedo = THREE.ImageUtils.loadTexture('objs/sponza/albedo.jpg');
+        var texBump   = THREE.ImageUtils.loadTexture('objs/sponza/bump.jpg');
+        texAlbedo.wrapS = texAlbedo.wrapT =
+            texBump.wrapS = texBump.wrapT = THREE.RepeatWrapping;
+        var material = new THREE.MeshLambertMaterial({ map: texAlbedo });
+        loadModel('objs/sponza/sponza.obj', function(o) {
+            o.traverse(function(child) {
+                if (child instanceof THREE.Mesh) {
+                    child.material = material;
+                }
+            });
+            o.material = material;
+            console.log(o);
+            scene.add(o);
+        });
 
         resize();
         requestAnimationFrame(update);
@@ -56,7 +63,6 @@
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
         renderer.setSize(w, h);
-        controls.handleResize();
         render();
     };
 
@@ -72,6 +78,6 @@
         renderer.render(scene, camera);
     };
 
-    window.onload = init;
-    window.onresize = resize;
+    window.handle_load.push(init);
+    window.handle_resize.push(resize);
 })();
