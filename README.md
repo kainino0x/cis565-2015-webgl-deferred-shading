@@ -1,5 +1,5 @@
-CUDA Rasterizer
-===============
+WebGL Deferred Shading
+======================
 
 **University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 6**
 
