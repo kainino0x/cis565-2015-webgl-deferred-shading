@@ -1,4 +1,5 @@
 WebGL Deferred Shading
+
 ======================
 
 **University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 6**
@@ -14,6 +15,18 @@ Instructions (delete me)
 ========================
 
 **INSTRUCTOR TODO**
+
+### Browser Support
+
+Your browser must support the `WEBGL_draw_buffers` extension. Chrome and
+Firefox on desktop should work, but mobile browsers will not.
+Check on [WebGL Report](http://webglreport.com/) to verify.
+
+### References
+
+* [Web Tracing Framework](http://google.github.io/tracing-framework/)
+* [WebGL 1.0 API Reference Card](https://www.khronos.org/files/webgl/webgl-reference-card-1_0.pdf)
+
 
 ## Submit
 

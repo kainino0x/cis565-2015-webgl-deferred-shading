@@ -4,32 +4,36 @@
     <title>CIS 565 WebGL Deferred Shading</title>
     <meta charset="utf-8">
 
+    <script src="lib/jquery-2.1.4.min.js"></script>
+    <script src="lib/es6-promise.min.js"></script>
+
     <script src="lib/three.js"></script>
     <script src="lib/OrbitControls.js"></script>
     <script src="lib/OBJLoader.js"></script>
+    <script src="lib/webgl-debug.js"></script>
 
     <script src="lib/stats.min.js"></script>
     <script src="lib/dat.gui.js"></script>
 
+    <script src="js/util.js"></script>
     <script src="js/main.js"></script>
     <script src="js/model.js"></script>
     <script src="js/render.js"></script>
+    <script src="js/framework.js"></script>
     <script src="js/ui.js"></script>
 
     <style>
         html, body {
             margin: 0px;
-            width: 100%;
-            height: 100%;
+            width: 800px;
+            height: 600px;
+            margin: 0 auto;
             overflow: hidden;
-        }
-        #canvas {
-            width: 100%;
-            height: 100%;
+            background-color: #333333;
         }
     </style>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
+    <canvas id="canvas" width="800px" height="600px"></canvas>
 </body>
 </html>

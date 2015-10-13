@@ -15,7 +15,7 @@ var cfg;
         cfg = new Cfg();
 
         var gui = new dat.GUI();
-        // TODO: Define possible config values
+        // TODO: Define any other possible config values
         gui.add(cfg, 'debug', [
             'none',
             'position',

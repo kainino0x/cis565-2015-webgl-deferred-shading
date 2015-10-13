@@ -1,0 +1,166 @@
+var gl, gl_draw_buffers;
+var width, height;
+
+(function() {
+    'use strict';
+
+    var canvas, renderer, scene, camera, controls, stats;
+    var models = [];
+
+    var cameraMat = new THREE.Matrix4();
+
+    var render = function() {
+        //return renderer.render(scene, camera);
+        camera.updateMatrixWorld();
+        camera.matrixWorldInverse.getInverse(camera.matrixWorld);
+        cameraMat.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+        window.Render.render({
+            cameraMat: cameraMat.elements,
+            models: models
+        });
+    }
+
+    var update = function() {
+        controls.update();
+        stats.begin();
+        render();
+        stats.end();
+        requestAnimationFrame(update);
+    };
+
+    var resize = function() {
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+        render();
+    };
+
+    var initExtensions = function() {
+        if (!gl.getExtension('OES_texture_float')) {
+            abort('unable to load extension: OES_texture_float');
+        }
+        if (!gl.getExtension('OES_texture_float_linear')) {
+            abort('unable to load extension: OES_texture_float');
+        }
+        if (!gl.getExtension('WEBGL_depth_texture')) {
+            abort('unable to load extension: WEBGL_depth_texture');
+        }
+
+        gl_draw_buffers = gl.getExtension('WEBGL_draw_buffers');
+        if (!gl_draw_buffers) {
+            abort('unable to load extension: WEBGL_draw_buffers');
+        } else {
+            var maxdb = gl.getParameter(gl_draw_buffers.MAX_DRAW_BUFFERS_WEBGL);
+            console.log('MAX_DRAW_BUFFERS_WEBGL: ' + maxdb);
+        }
+    };
+
+    var init = function() {
+        canvas = document.getElementById('canvas');
+        renderer = new THREE.WebGLRenderer({ canvas: canvas });
+        gl = renderer.context;
+
+        function throwOnGLError(err, funcName, args) {
+            abort(WebGLDebugUtils.glEnumToString(err) +
+                " was caused by call to: " + funcName);
+        };
+        gl = WebGLDebugUtils.makeDebugContext(gl, throwOnGLError);
+
+        initExtensions();
+
+        stats = new Stats();
+        stats.setMode(1); // 0: fps, 1: ms, 2: mb
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.left = '0px';
+        stats.domElement.style.top = '0px';
+        document.body.appendChild(stats.domElement);
+
+        scene = new THREE.Scene();
+
+        width = canvas.width;
+        height = canvas.height;
+        camera = new THREE.PerspectiveCamera(
+            35,             // Field of view
+            width / height, // Aspect ratio
+            0.1,            // Near plane
+            10000           // Far plane
+        );
+        camera.position.set(-8, 1.5, -1);
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.enableZoom = true;
+        controls.target.set(0, 3.2, 0);
+        controls.rotateSpeed = 0.3;
+        controls.zoomSpeed = 1.0;
+        controls.panSpeed = 0.8;
+
+        var light = new THREE.PointLight(0xFFFFFF);
+        scene.add(light);
+
+        renderer.setClearColor(0xAABBFF, 1);
+
+        // CHECKITOUT: Load textures and mesh
+        var texAlbedo = THREE.ImageUtils.loadTexture('objs/sponza/albedo.jpg');
+        var texBump   = THREE.ImageUtils.loadTexture('objs/sponza/bump.jpg');
+        texAlbedo.wrapS = texAlbedo.wrapT =
+            texBump.wrapS = texBump.wrapT = THREE.RepeatWrapping;
+        var material = new THREE.MeshLambertMaterial({ map: texAlbedo });
+        loadModel('objs/sponza/sponza.obj', function(o) {
+            o.traverse(function(child) {
+                if (child instanceof THREE.Mesh) {
+                    child.material = material;
+                }
+            });
+            o.material = material;
+            scene.add(o);
+            for (var i = 0; i < o.children.length; i++) {
+                var c = o.children[i];
+                var g = c.geometry.attributes;
+                var idx = c.geometry.index;
+
+                var gposition = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, gposition);
+                gl.bufferData(gl.ARRAY_BUFFER, g.position.array, gl.STATIC_DRAW);
+
+                var gnormal = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, gnormal);
+                gl.bufferData(gl.ARRAY_BUFFER, g.normal.array, gl.STATIC_DRAW);
+
+                var guv = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, guv);
+                gl.bufferData(gl.ARRAY_BUFFER, g.uv.array, gl.STATIC_DRAW);
+
+                if (!idx) {
+                    idx = new Uint32Array(g.position.array.length / 3);
+                    for (var j = 0; j < idx.length; j++) {
+                        idx[j] = j;
+                    }
+                }
+
+                var gidx = gl.createBuffer();
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gidx);
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+
+                models.push({
+                    idx: gidx,
+                    elemCount: idx.length / 3,
+                    position: gposition,
+                    normal: gnormal,
+                    uv: guv,
+                    albedo: c.material.map.id,
+                    bump: -1
+                });
+            }
+        });
+
+        renderer.clear();
+        renderer.render(scene, camera);
+        resize();
+        window.Render.setup();
+
+        requestAnimationFrame(update);
+    };
+
+    window.handle_load.push(init);
+})();
