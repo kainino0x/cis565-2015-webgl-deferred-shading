@@ -24,6 +24,7 @@ var width, height;
         controls.update();
         stats.begin();
         render();
+        gl.finish();
         stats.end();
         requestAnimationFrame(update);
     };
@@ -60,11 +61,15 @@ var width, height;
         renderer = new THREE.WebGLRenderer({ canvas: canvas });
         gl = renderer.context;
 
-        function throwOnGLError(err, funcName, args) {
-            abort(WebGLDebugUtils.glEnumToString(err) +
-                " was caused by call to: " + funcName);
-        };
-        gl = WebGLDebugUtils.makeDebugContext(gl, throwOnGLError);
+        // TODO: For performance measurements, disable debug mode!
+        var debugMode = true;
+        if (debugMode) {
+            var throwOnGLError = function(err, funcName, args) {
+                abort(WebGLDebugUtils.glEnumToString(err) +
+                    " was caused by call to: " + funcName);
+            };
+            gl = WebGLDebugUtils.makeDebugContext(gl, throwOnGLError);
+        }
 
         initExtensions();
 
@@ -82,8 +87,8 @@ var width, height;
         camera = new THREE.PerspectiveCamera(
             35,             // Field of view
             width / height, // Aspect ratio
-            0.1,            // Near plane
-            10000           // Far plane
+            1.0,            // Near plane
+            100             // Far plane
         );
         camera.position.set(-8, 1.5, -1);
 
@@ -144,7 +149,7 @@ var width, height;
 
                 models.push({
                     idx: gidx,
-                    elemCount: idx.length / 3,
+                    elemCount: idx.length,
                     position: gposition,
                     normal: gnormal,
                     uv: guv,

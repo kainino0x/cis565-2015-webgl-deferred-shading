@@ -67,7 +67,7 @@
                           gl.RGBA, gl.FLOAT, null);
 
             gl.framebufferTexture2D(
-                gl.FRAMEBUFFER, gl_draw_buffers.COLOR_ATTACHMENT0_WEBGL + i,
+                gl.FRAMEBUFFER, gl_draw_buffers['COLOR_ATTACHMENT' + i + '_WEBGL'],
                 gl.TEXTURE_2D, tex, 0);
             gbufs.push(tex);
         }
@@ -145,22 +145,24 @@
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.useProgram(progDeferred.prog);
 
+        // Bind all of the g-buffers as texture inputs
         for (var i = 0; i < NUM_GBUFFERS; i++) {
-            gl.activeTexture(gl.TEXTURE0 + i);
+            gl.activeTexture(gl['TEXTURE' + i]);
             gl.bindTexture(gl.TEXTURE_2D, gbufs[i]);
             gl.uniform1i(progDeferred.u_gbuf[i], i);
         }
-        gl.activeTexture(gl.TEXTURE0 + NUM_GBUFFERS);
+        // Bind the depth texture as an input
+        gl.activeTexture(gl['TEXTURE' + NUM_GBUFFERS]);
         gl.bindTexture(gl.TEXTURE_2D, depthTex);
 
         gl.uniform1i(progDeferred.u_depth, NUM_GBUFFERS);
         renderFullScreenQuad(progDeferred);
 
         for (var i = 0; i < NUM_GBUFFERS; i++) {
-            gl.activeTexture(gl.TEXTURE0 + i);
+            gl.activeTexture(gl['TEXTURE' + i]);
             gl.bindTexture(gl.TEXTURE_2D, null);
         }
-        gl.activeTexture(gl.TEXTURE0 + NUM_GBUFFERS);
+        gl.activeTexture(gl['TEXTURE' + NUM_GBUFFERS]);
         gl.bindTexture(gl.TEXTURE_2D, null);
 
         gl.useProgram(null);
