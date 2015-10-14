@@ -56,6 +56,7 @@
             gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthTex, 0);
 
         gbufs = [];
+        var attachments = [];
         for (var i = 0; i < NUM_GBUFFERS; i++) {
             var tex = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -66,10 +67,11 @@
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0,
                           gl.RGBA, gl.FLOAT, null);
 
+            var attachment = gl_draw_buffers['COLOR_ATTACHMENT' + i + '_WEBGL'];
             gl.framebufferTexture2D(
-                gl.FRAMEBUFFER, gl_draw_buffers['COLOR_ATTACHMENT' + i + '_WEBGL'],
-                gl.TEXTURE_2D, tex, 0);
+                gl.FRAMEBUFFER, attachment, gl.TEXTURE_2D, tex, 0);
             gbufs.push(tex);
+            attachments.push(attachment);
         }
 
         gl.bindTexture(gl.TEXTURE_2D, null);
@@ -78,6 +80,7 @@
             abort('framebuffer incomplete');
             // See http://www.khronos.org/opengles/sdk/docs/man/xhtml/glCheckFramebufferStatus.xml
         }
+        gl_draw_buffers.drawBuffersWEBGL(attachments);
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     };

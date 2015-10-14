@@ -14,8 +14,8 @@ void main() {
     vec4 gb3 = texture2D(u_gbuf[3], v_uv);
     float depth = texture2D(u_depth, v_uv).x;
 
-    vec3 nor = gb0.xyz;
-    vec3 pos = gb1.xyz;
+    vec3 pos = gb0.xyz;
+    vec3 nor = gb1.xyz;
     vec3 alb = gb2.xyz;
 
     gl_FragColor = vec4(abs(nor), 1.0);
