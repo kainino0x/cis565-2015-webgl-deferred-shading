@@ -78,7 +78,6 @@
 
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
             abort('framebuffer incomplete');
-            // See http://www.khronos.org/opengles/sdk/docs/man/xhtml/glCheckFramebufferStatus.xml
         }
         gl_draw_buffers.drawBuffersWEBGL(attachments);
 
