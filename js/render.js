@@ -1,7 +1,7 @@
 (function() {
     'use strict';
     var pass_copy = {};
-    var pass_post1 = {};
+    var pass_deferred = {};
     var progCopy, progClear, progDeferred, progPost1;
 
     var NUM_GBUFFERS = 4;
@@ -51,7 +51,6 @@
                 var p = { prog: prog };
 
                 p.u_color    = gl.getUniformLocation(prog, 'u_color');
-                p.u_depth    = gl.getUniformLocation(prog, 'u_depth');
                 p.a_position = gl.getAttribLocation(prog, 'a_position');
 
                 progPost1 = p;
@@ -82,11 +81,9 @@
         // Create/configure framebuffer between "deferred" and "post1" stages
         // ------------------------------------------------------------------
 
-        pass_post1.fbo = gl.createFramebuffer();
-        pass_post1.depthTex = createAndBindDepthTargetTexture(pass_post1.fbo);
-
-        pass_post1.colorTex = createAndBindColorTargetTexture(
-            pass_post1.fbo, gl_draw_buffers.COLOR_ATTACHMENT0_WEBGL);
+        pass_deferred.fbo = gl.createFramebuffer();
+        pass_deferred.colorTex = createAndBindColorTargetTexture(
+            pass_deferred.fbo, gl_draw_buffers.COLOR_ATTACHMENT0_WEBGL);
 
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
             abort('framebuffer incomplete');
@@ -99,9 +96,9 @@
             return;
         }
 
-        // ---------------------
-        // Render into g-buffers
-        // ---------------------
+        // ----------------------------------
+        // 'copy' pass: Render into g-buffers
+        // ----------------------------------
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, pass_copy.fbo);
 
@@ -146,12 +143,16 @@
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
         }
 
+        gl.useProgram(null);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-        // ------------------------
-        // Perform deferred shading
-        // ------------------------
+        // -----------------------------------------
+        // 'deferred' pass: Perform material shading
+        // -----------------------------------------
 
+        gl.bindFramebuffer(gl.FRAMEBUFFER, pass_deferred.fbo);
+
+        // Clear the framebuffer
         gl.clearColor(0.66, 0.73, 1.0, 1.0);
         gl.clearDepth(1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -163,11 +164,8 @@
             gl.bindTexture(gl.TEXTURE_2D, pass_copy.gbufs[i]);
             gl.uniform1i(progDeferred.u_gbuf[i], i);
         }
-        // Bind the depth texture as an input
-        gl.activeTexture(gl['TEXTURE' + NUM_GBUFFERS]);
-        gl.bindTexture(gl.TEXTURE_2D, pass_copy.depthTex);
 
-        gl.uniform1i(progDeferred.u_depth, NUM_GBUFFERS);
+        // Render a fullscreen quad to perform shading on
         renderFullScreenQuad(progDeferred);
 
         for (var i = 0; i < NUM_GBUFFERS; i++) {
@@ -178,6 +176,35 @@
         gl.bindTexture(gl.TEXTURE_2D, null);
 
         gl.useProgram(null);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        // -----------------------------------------------------
+        // 'post1' pass: Perform (first) pass of post-processing
+        // -----------------------------------------------------
+
+        // Clear the framebuffer
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clearDepth(1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.useProgram(progPost1.prog);
+
+        // Bind the deferred pass's color output as a texture input
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, pass_deferred.colorTex);
+        gl.uniform1i(progPost1.u_color, 0);
+
+        // Render a fullscreen quad to perform shading on
+        renderFullScreenQuad(progPost1);
+
+        for (var i = 0; i < NUM_GBUFFERS; i++) {
+            gl.activeTexture(gl['TEXTURE' + i]);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+        }
+        gl.activeTexture(gl['TEXTURE' + NUM_GBUFFERS]);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+        gl.useProgram(null);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     };
 
     window.Render = {};

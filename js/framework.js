@@ -10,7 +10,7 @@ var width, height;
     var cameraMat = new THREE.Matrix4();
 
     var render = function() {
-        return renderer.render(scene, camera);
+        //return renderer.render(scene, camera);
         camera.updateMatrixWorld();
         camera.matrixWorldInverse.getInverse(camera.matrixWorld);
         cameraMat.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
@@ -90,12 +90,12 @@ var width, height;
             1.0,            // Near plane
             100             // Far plane
         );
-        camera.position.set(-15.5, 1, -0.5);
+        camera.position.set(-15.5, 1, -1);
 
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.enableZoom = true;
-        controls.target.set(0, 4.2, 0);
+        controls.target.set(0, 4, 0);
         controls.rotateSpeed = 0.3;
         controls.zoomSpeed = 1.0;
         controls.panSpeed = 0.8;
@@ -106,25 +106,7 @@ var width, height;
         renderer.setClearColor(0xAABBFF, 1);
 
         // CHECKITOUT: Load textures and mesh
-        var texAlbedo = THREE.ImageUtils.loadTexture('objs/sponza/albedo.jpg');
-        var texBump   = THREE.ImageUtils.loadTexture('objs/sponza/bump.jpg');
-        texAlbedo.wrapS = texAlbedo.wrapT =
-            texBump.wrapS = texBump.wrapT = THREE.RepeatWrapping;
-        //texAlbedo.__webglTexture = gl.createTexture();
-        //texBump.__webglTexture = gl.createTexture();
-        //texAlbedo.__webglInit = true;
-        //texBump.__webglInit = true;
-        var material = new THREE.MeshPhongMaterial({
-            map: texAlbedo,
-            bumpMap: texBump
-        });
         loadModel('objs/sponza/sponza.obj', function(o) {
-            o.traverse(function(child) {
-                if (child instanceof THREE.Mesh) {
-                    child.material = material;
-                }
-            });
-            o.material = material;
             scene.add(o);
             for (var i = 0; i < o.children.length; i++) {
                 var c = o.children[i];
@@ -154,22 +136,29 @@ var width, height;
                 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gidx);
                 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
 
-                models.push({
+                var m = {
                     idx: gidx,
                     elemCount: idx.length,
                     position: gposition,
                     normal: gnormal,
                     uv: guv,
-                    albedo: c.material.map.id,
-                    bump: -1
+                    albedo: null,
+                    bump: null
+                };
+
+                loadTexture('objs/sponza/albedo.jpg').then(function(tex) {
+                    m.albedo = tex;
                 });
+                loadTexture('objs/sponza/bump.jpg').then(function(tex) {
+                    m.bump = tex;
+                });
+
+                models.push(m);
             }
         });
 
-        // This needs to be done once to get three.js to initialize stuff
         renderer.clear();
         renderer.render(scene, camera);
-
         resize();
         window.Render.setup();
 

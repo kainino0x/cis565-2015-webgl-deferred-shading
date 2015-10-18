@@ -15,6 +15,37 @@ window.abort = (function() {
     return f;
 })();
 
+window.loadTexture = (function() {
+    'use strict';
+
+    var handleTextureLoaded = function(img, tex) {
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+    };
+
+    var f = function(url) {
+        return new Promise(function(resolve){
+            var prom = Promise.resolve();
+
+            var tex = gl.createTexture();
+            var img = new Image();
+            img.onload = function() {
+                handleTextureLoaded(img, tex);
+                resolve(tex);
+            };
+            img.src = url;
+        });
+    };
+
+    return f;
+})();
+
 window.loadShaderProgram = (function() {
     'use strict';
 
