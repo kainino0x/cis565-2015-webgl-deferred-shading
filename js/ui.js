@@ -20,9 +20,10 @@ var cfg;
             None: 0,
             Depth: 1,
             Position: 2,
-            Normal: 3,
+            'Geometry normal': 3,
             'Color map': 4,
-            'Normal map': 5
+            'Normal map': 5,
+            'Surface normal': 6
         });
         gui.add(cfg, 'enableBloom');
         gui.add(cfg, 'enableToon');

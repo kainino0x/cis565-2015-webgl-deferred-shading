@@ -14,7 +14,7 @@ void main() {
     // model-view position
     gl_FragData[0] = vec4(v_position, 1.0);
     // normal
-    gl_FragData[1] = vec4(v_normal, 0.0);
+    gl_FragData[1] = vec4(normalize(v_normal), 0.0);
     // color map
     gl_FragData[2] = texture2D(u_colmap, v_uv);
     // normal map
