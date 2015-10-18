@@ -13,7 +13,7 @@ var width, height;
         camera.updateMatrixWorld();
         camera.matrixWorldInverse.getInverse(camera.matrixWorld);
         cameraMat.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-        window.Render.render({
+        window.deferredRender({
             cameraMat: cameraMat.elements,
             models: models
         });
@@ -97,14 +97,9 @@ var width, height;
         controls.target.set(0, 4, 0);
         controls.rotateSpeed = 0.3;
         controls.zoomSpeed = 1.0;
-        controls.panSpeed = 0.8;
+        controls.panSpeed = 2.0;
 
-        var light = new THREE.PointLight(0xFFFFFF);
-        scene.add(light);
-
-        renderer.setClearColor(0xAABBFF, 1);
-
-        // CHECKITOUT: Load textures and mesh
+        // CHECKITOUT: Load mesh and textures
         loadModel('objs/sponza/sponza.obj', function(o) {
             scene.add(o);
             for (var i = 0; i < o.children.length; i++) {
@@ -145,6 +140,7 @@ var width, height;
                     normap: null
                 };
 
+                // CHECKITOUT: load textures
                 loadTexture('objs/sponza/color.jpg').then(function(tex) {
                     m.colmap = tex;
                 });
@@ -156,10 +152,11 @@ var width, height;
             }
         });
 
-        renderer.clear();
-        renderer.render(scene, camera);
+        // Render once to get three.js to copy all of the model buffers
         resize();
-        window.Render.setup();
+        renderer.render(scene, camera);
+
+        window.deferredSetup();
 
         requestAnimationFrame(update);
     };

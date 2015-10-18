@@ -6,7 +6,7 @@
 
     var NUM_GBUFFERS = 4;
 
-    var setup = function() {
+    window.deferredSetup = function() {
         console.log('setup: ' + width + ' x ' + height);
 
         // ----------------------
@@ -73,6 +73,7 @@
             attachments.push(attachment);
         }
 
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
             abort('framebuffer incomplete');
         }
@@ -92,7 +93,7 @@
         gl_draw_buffers.drawBuffersWEBGL([gl_draw_buffers.COLOR_ATTACHMENT0_WEBGL]);
     };
 
-    var render = function(state) {
+    window.deferredRender = function(state) {
         if (!progPost1 || !progDeferred || !progClear) {
             return;
         }
@@ -218,8 +219,4 @@
 
         gl.useProgram(null);
     };
-
-    window.Render = {};
-    window.Render.setup = setup;
-    window.Render.render = render;
 })();
