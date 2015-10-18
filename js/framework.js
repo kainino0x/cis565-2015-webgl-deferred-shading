@@ -10,7 +10,7 @@ var width, height;
     var cameraMat = new THREE.Matrix4();
 
     var render = function() {
-        //return renderer.render(scene, camera);
+        return renderer.render(scene, camera);
         camera.updateMatrixWorld();
         camera.matrixWorldInverse.getInverse(camera.matrixWorld);
         cameraMat.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
@@ -85,17 +85,17 @@ var width, height;
         width = canvas.width;
         height = canvas.height;
         camera = new THREE.PerspectiveCamera(
-            35,             // Field of view
+            45,             // Field of view
             width / height, // Aspect ratio
             1.0,            // Near plane
             100             // Far plane
         );
-        camera.position.set(-8, 1.5, -1);
+        camera.position.set(-15.5, 1, -0.5);
 
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.enableZoom = true;
-        controls.target.set(0, 3.2, 0);
+        controls.target.set(0, 4.2, 0);
         controls.rotateSpeed = 0.3;
         controls.zoomSpeed = 1.0;
         controls.panSpeed = 0.8;
@@ -110,7 +110,14 @@ var width, height;
         var texBump   = THREE.ImageUtils.loadTexture('objs/sponza/bump.jpg');
         texAlbedo.wrapS = texAlbedo.wrapT =
             texBump.wrapS = texBump.wrapT = THREE.RepeatWrapping;
-        var material = new THREE.MeshLambertMaterial({ map: texAlbedo });
+        //texAlbedo.__webglTexture = gl.createTexture();
+        //texBump.__webglTexture = gl.createTexture();
+        //texAlbedo.__webglInit = true;
+        //texBump.__webglInit = true;
+        var material = new THREE.MeshPhongMaterial({
+            map: texAlbedo,
+            bumpMap: texBump
+        });
         loadModel('objs/sponza/sponza.obj', function(o) {
             o.traverse(function(child) {
                 if (child instanceof THREE.Mesh) {
@@ -159,8 +166,10 @@ var width, height;
             }
         });
 
+        // This needs to be done once to get three.js to initialize stuff
         renderer.clear();
         renderer.render(scene, camera);
+
         resize();
         window.Render.setup();
 
