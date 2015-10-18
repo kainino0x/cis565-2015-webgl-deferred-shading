@@ -18,8 +18,8 @@
                 var p = { prog: prog };
 
                 p.u_cameraMat = gl.getUniformLocation(prog, 'u_cameraMat');
-                p.u_albedo    = gl.getUniformLocation(prog, 'u_albedo');
-                p.u_bump      = gl.getUniformLocation(prog, 'u_bump');
+                p.u_colmap    = gl.getUniformLocation(prog, 'u_colmap');
+                p.u_normap    = gl.getUniformLocation(prog, 'u_normap');
                 p.a_position  = gl.getAttribLocation(prog, 'a_position');
                 p.a_normal    = gl.getAttribLocation(prog, 'a_normal');
                 p.a_uv        = gl.getAttribLocation(prog, 'a_uv');
@@ -36,6 +36,7 @@
             function(prog) {
                 var p = { prog: prog };
 
+                p.u_debug    = gl.getUniformLocation(prog, 'u_debug');
                 p.u_gbuf = [];
                 for (var i = 0; i < NUM_GBUFFERS; i++) {
                     p.u_gbuf[i] = gl.getUniformLocation(prog, 'u_gbuf[' + i + ']');
@@ -114,11 +115,15 @@
         for (var i = 0; i < state.models.length; i++) {
             var m = state.models[i];
 
-            if (m.albedo !== -1) {
-                gl.uniform1i(progCopy.u_albedo, m.albedo);
+            if (m.colmap) {
+                gl.activeTexture(gl.TEXTURE0);
+                gl.bindTexture(gl.TEXTURE_2D, m.colmap);
+                gl.uniform1i(progCopy.u_colmap, 0);
             }
-            if (m.bump !== -1) {
-                gl.uniform1i(progCopy.u_bump, m.bump);
+            if (m.normap) {
+                gl.activeTexture(gl.TEXTURE1);
+                gl.bindTexture(gl.TEXTURE_2D, m.normap);
+                gl.uniform1i(progCopy.u_normap, 1);
             }
 
             gl.enableVertexAttribArray(progCopy.a_position);
@@ -158,12 +163,20 @@
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.useProgram(progDeferred.prog);
 
+        // Tell shader which debug view to use
+        if (cfg) {
+            gl.uniform1i(progDeferred.u_debug, cfg.debug);
+        }
+
         // Bind all of the g-buffers as texture inputs
         for (var i = 0; i < NUM_GBUFFERS; i++) {
             gl.activeTexture(gl['TEXTURE' + i]);
             gl.bindTexture(gl.TEXTURE_2D, pass_copy.gbufs[i]);
             gl.uniform1i(progDeferred.u_gbuf[i], i);
         }
+        gl.activeTexture(gl['TEXTURE' + NUM_GBUFFERS]);
+        gl.bindTexture(gl.TEXTURE_2D, pass_copy.depthTex);
+        gl.uniform1i(progDeferred.u_depth, NUM_GBUFFERS);
 
         // Render a fullscreen quad to perform shading on
         renderFullScreenQuad(progDeferred);
@@ -204,7 +217,6 @@
         gl.bindTexture(gl.TEXTURE_2D, null);
 
         gl.useProgram(null);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     };
 
     window.Render = {};

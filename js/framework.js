@@ -10,7 +10,6 @@ var width, height;
     var cameraMat = new THREE.Matrix4();
 
     var render = function() {
-        //return renderer.render(scene, camera);
         camera.updateMatrixWorld();
         camera.matrixWorldInverse.getInverse(camera.matrixWorld);
         cameraMat.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
@@ -142,15 +141,15 @@ var width, height;
                     position: gposition,
                     normal: gnormal,
                     uv: guv,
-                    albedo: null,
-                    bump: null
+                    colmap: null,
+                    normap: null
                 };
 
-                loadTexture('objs/sponza/albedo.jpg').then(function(tex) {
-                    m.albedo = tex;
+                loadTexture('objs/sponza/color.jpg').then(function(tex) {
+                    m.colmap = tex;
                 });
-                loadTexture('objs/sponza/bump.jpg').then(function(tex) {
-                    m.bump = tex;
+                loadTexture('objs/sponza/normal.png').then(function(tex) {
+                    m.normap = tex;
                 });
 
                 models.push(m);

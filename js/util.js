@@ -155,21 +155,3 @@ window.renderFullScreenQuad = (function() {
 
     return f;
 })();
-
-/*
-var threeTextureToWebGL = function(texture) {
-    var t = gl.createTexture();
-    texture.__webglInit = false;
-    texture.__webglTexture = t;
-
-    gl.bindTexture(gl.TEXTURE_2D, texture.__webglTexture);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, texture.magFilter);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, texture.minFilter);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, texture.wrapS);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, texture.wrapT);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.FLOAT, null);
-    gl.bindTexture(gl.TEXTURE_2D, null);
-
-    return t;
-};
-*/

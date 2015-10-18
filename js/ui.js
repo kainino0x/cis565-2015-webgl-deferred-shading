@@ -16,13 +16,14 @@ var cfg;
 
         var gui = new dat.GUI();
         // TODO: Define any other possible config values
-        gui.add(cfg, 'debug', [
-            'none',
-            'position',
-            'normal',
-            'albedo',
-            'depth'
-        ]);
+        gui.add(cfg, 'debug', {
+            None: 0,
+            Depth: 1,
+            Position: 2,
+            Normal: 3,
+            'Color map': 4,
+            'Normal map': 5
+        });
         gui.add(cfg, 'enableBloom');
         gui.add(cfg, 'enableToon');
         gui.add(cfg, 'enableSSAO');
