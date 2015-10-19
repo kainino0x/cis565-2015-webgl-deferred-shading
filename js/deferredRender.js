@@ -19,15 +19,18 @@
             R.lights[i].pos[1] = (R.lights[i].pos[1] + R.light_dt - mn + mx) % mx + mn;
         }
 
+        // Execute deferred shading pipeline
         R.pass_copy.render(state);
         if (cfg && cfg.debugView >= 0) {
+            // Do a debug render instead of a regular render
             // Don't do any post-processing in debug mode
             R.pass_debug.render();
-            return;
+        } else {
+            // Deferred pass and postprocessing pass(es)
+            R.pass_deferred.render();
+            R.pass_post1.render();
+            // TODO: call more postprocessing passes, if any
         }
-
-        R.pass_deferred.render();
-        R.pass_post1.render();
     };
 
     /**
