@@ -3,7 +3,8 @@
     var pass_copy = {};
     var pass_deferred = {};
     var pass_post1 = {};
-    var progCopy, progClear, progAmbient, progBlinnPhong, progDebug, progPost1;
+    var progCopy, progClear, progDebug, progPost1;
+    var prog_Ambient, prog_BlinnPhong_Point;
     var lights = [];
 
     var light_min = [-6, 0, -14];
@@ -86,8 +87,8 @@
 
     window.deferredRender = function(state) {
         if (!(progPost1 &&
-              progAmbient &&
-              progBlinnPhong &&
+              prog_Ambient &&
+              prog_BlinnPhong_Point &&
               progDebug &&
               progClear)) {
             return;
@@ -183,15 +184,15 @@
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
             // * Light using ambient light
-            bindLightPass(progAmbient);
-            renderFullScreenQuad(progAmbient);
+            bindLightPass(prog_Ambient);
+            renderFullScreenQuad(prog_Ambient);
 
             // * Light using Blinn-Phong lighting
-            bindLightPass(progBlinnPhong);
+            bindLightPass(prog_BlinnPhong_Point);
             for (var i = 0; i < lights.length; i++) {
-                gl.uniform3fv(progBlinnPhong.u_lightPos, lights[i].pos);
-                gl.uniform3fv(progBlinnPhong.u_lightCol, lights[i].col);
-                renderFullScreenQuad(progBlinnPhong);
+                gl.uniform3fv(prog_BlinnPhong_Point.u_lightPos, lights[i].pos);
+                gl.uniform3fv(prog_BlinnPhong_Point.u_lightCol, lights[i].col);
+                renderFullScreenQuad(prog_BlinnPhong_Point);
             }
 
             gl.disable(gl.BLEND);
@@ -287,12 +288,12 @@
 
         loadDeferredProgram('ambient', function(p) {
             // Save the object into this variable for access later
-            progAmbient = p;
+            prog_Ambient = p;
         });
 
-        loadDeferredProgram('blinnphong', function(p) {
+        loadDeferredProgram('blinnphong-point', function(p) {
             // Save the object into this variable for access later
-            progBlinnPhong = p;
+            prog_BlinnPhong_Point = p;
         });
 
         loadShaderProgram(gl, 'glsl/quad.vert.glsl', 'glsl/debug.frag.glsl').then(
