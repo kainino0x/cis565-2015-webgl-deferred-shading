@@ -32,9 +32,27 @@
             overflow: hidden;
             background-color: #333333;
         }
+        #debugmodewarning {
+            text-align: center;
+            font-weight: bold;
+            font-family: sans-serif;
+            background-color: #000000;
+            color: #ffff00;
+            position: fixed;
+            bottom: 0px;
+            left: 0px;
+            width: 100%;
+            display: block;
+            visibility: hidden;
+        }
     </style>
 </head>
 <body>
     <canvas id="canvas" width="800px" height="600px"></canvas>
+    <div id="debugmodewarning">
+        <span style="font-size: 200%">DEBUG MODE!</span>
+        Debug mode is very slow &ndash; disable
+        <code>debugMode</code> in <code>framework.js</code>.
+    </div>
 </body>
 </html>

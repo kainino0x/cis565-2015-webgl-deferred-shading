@@ -37,6 +37,7 @@ var width, height;
 
     var initExtensions = function() {
         var extensions = gl.getSupportedExtensions();
+        console.log(extensions);
 
         var reqd = [
             'OES_texture_float',
@@ -44,7 +45,6 @@ var width, height;
             'WEBGL_depth_texture',
             'WEBGL_draw_buffers'
         ];
-        console.log(extensions);
         for (var i = 0; i < reqd.length; i++) {
             var e = reqd[i];
             if (extensions.indexOf(e) < 0) {
@@ -68,7 +68,9 @@ var width, height;
 
         // TODO: For performance measurements, disable debug mode!
         var debugMode = true;
+
         if (debugMode) {
+            $('#debugmodewarning').css('visibility', 'visible');
             var throwOnGLError = function(err, funcName, args) {
                 abort(WebGLDebugUtils.glEnumToString(err) +
                     " was caused by call to: " + funcName);

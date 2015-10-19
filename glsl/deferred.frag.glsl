@@ -13,6 +13,8 @@ uniform sampler2D u_depth;
 
 varying vec2 v_uv;
 
+const vec4 SKY_COLOR = vec4(0.66, 0.73, 1.0, 1.0);
+
 vec3 applyNormalMap(vec3 geomnor, vec3 normap) {
     normap = normap * 2.0 - 1.0;
     vec3 up = normalize(vec3(0.001, 1, 0.001));
@@ -49,6 +51,11 @@ void main() {
         } else if (u_debug == 6) {
             gl_FragColor = vec4(abs(nor), 1.0);
         }
+        return;
+    }
+
+    if (depth == 1.0) {
+        gl_FragColor = SKY_COLOR;
         return;
     }
 
