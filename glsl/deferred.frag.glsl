@@ -3,8 +3,9 @@ precision highp float;
 precision highp int;
 
 #define NUM_GBUFFERS 4
-#define NUM_LIGHTS 1
 
+uniform vec3 u_lightCol;
+uniform vec3 u_lightPos;
 uniform sampler2D u_gbufs[NUM_GBUFFERS];
 uniform sampler2D u_depth;
 
@@ -41,13 +42,10 @@ void main() {
 
     gl_FragColor = vec4(1, 0, 1, 1);  // magenta
 
-    vec3 diff = vec3(0.0);
-    for (int i = 0; i < NUM_LIGHTS; i++) {
-        //diff += u_lightCol[i] * dot(nor, u_lightPos[i] - pos);
-        vec3 lightdiff = vec3(0.0, 5.0, 0.0) - pos;
-        float lightdist = length(lightdiff);
-        vec3 lightdir = lightdiff / lightdist;
-        diff += vec3(5.0) * max(0.0, dot(nor, lightdir)) / lightdist;
-    }
+    //diff += u_lightCol[i] * dot(nor, u_lightPos[i] - pos);
+    vec3 lightdiff = u_lightPos - pos;
+    float lightdist = length(lightdiff);
+    vec3 lightdir = lightdiff / lightdist;
+    vec3 diff = u_lightCol * max(0.0, dot(nor, lightdir)) * max(0.0, 5.0 - lightdist);
     gl_FragColor = vec4(colmap * (vec3(0.2) + diff), 1.0);
 }

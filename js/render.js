@@ -4,16 +4,46 @@
     var pass_deferred = {};
     var pass_post1 = {};
     var progCopy, progClear, progDeferred, progDebug, progPost1;
+    var lights = [];
 
+    var NUM_LIGHTS = 10;
     var NUM_GBUFFERS = 4;
 
+    /**
+     * Set up the deferred pipeline framebuffer objects and textures.
+     */
     window.deferredSetup = function() {
         loadAllShaderPrograms();
 
-        // -----------------------------------------------------------------
-        // Create/configure framebuffer between "copy" and "deferred" stages
-        // -----------------------------------------------------------------
+        pass_copy.setup();
+        pass_deferred.setup();
 
+        var light_min = [-6, 0, -14];
+        var light_max = [6, 12, 14];
+        var posfn = function() {
+            var r = [0, 0, 0];
+            for (var i = 0; i < 3; i++) {
+                var mn = light_min[i];
+                var mx = light_max[i];
+                r = Math.random() * (mx - mn) + mn;
+            }
+            return r;
+        };
+        for (var i = 0; i < NUM_LIGHTS; i++) {
+            lights.push({
+                pos: [posfn(), posfn(), posfn()],
+                col: [
+                    3 + Math.random() * 5,
+                    3 + Math.random() * 5,
+                    3 + Math.random() * 5]
+            });
+        }
+    };
+
+    /**
+     * Create/configure framebuffer between "copy" and "deferred" stages
+     */
+    pass_copy.setup = function() {
         // * Create the FBO
         pass_copy.fbo = gl.createFramebuffer();
         // * Create, bind, and store a depth target texture for the FBO
@@ -34,11 +64,12 @@
         // * Tell the WEBGL_draw_buffers extension which FBO attachments are
         //   being used. (This extension allows for multiple render targets.)
         gl_draw_buffers.drawBuffersWEBGL(attachments);
+    };
 
-        // ------------------------------------------------------------------
-        // Create/configure framebuffer between "deferred" and "post1" stages
-        // ------------------------------------------------------------------
-
+    /**
+     * Create/configure framebuffer between "deferred" and "post1" stages
+     */
+    pass_deferred.setup = function() {
         // * Create the FBO
         pass_deferred.fbo = gl.createFramebuffer();
         // * Create, bind, and store a single color target texture for the FBO
@@ -132,7 +163,18 @@
         gl.uniform1i(prog.u_depth, NUM_GBUFFERS);
 
         // * Render a fullscreen quad to perform shading on
-        renderFullScreenQuad(prog);
+        if (cfg && cfg.debugView >= 0) {
+            renderFullScreenQuad(prog);
+        } else {
+            // * Render it once for each light, if not debugging
+            gl.blendFunc(gl.ONE, gl.ONE);
+            for (var i = 0; i < lights.length; i++) {
+                gl.uniform3fv(prog.u_lightPos, lights[i].pos);
+                gl.uniform3fv(prog.u_lightCol, lights[i].col);
+                renderFullScreenQuad(prog);
+                // INSTRUCTOR TODO: does not actually seem to be adding multiple lights
+            }
+        }
 
         // * Unbind everything
         for (var i = 0; i < NUM_GBUFFERS; i++) {
@@ -207,7 +249,8 @@
                 var p = { prog: prog };
 
                 // Retrieve the uniform and attribute locations
-                p.u_enableEffect0 = gl.getUniformLocation(prog, 'u_enableEffect0');
+                p.u_lightCol = gl.getUniformLocation(prog, 'u_lightCol');
+                p.u_lightPos = gl.getUniformLocation(prog, 'u_lightPos');
                 p.u_gbufs = [];
                 for (var i = 0; i < NUM_GBUFFERS; i++) {
                     p.u_gbufs[i] = gl.getUniformLocation(prog, 'u_gbufs[' + i + ']');

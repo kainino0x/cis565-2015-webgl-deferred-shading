@@ -7,7 +7,7 @@ window.abort = (function() {
         if (!first) {
             $('#alertcontainer').css('display', 'block');
             first = true;
-            $('#alerttext').html(m);
+            $('#alerttext').text(m);
         }
         throw m;
     };

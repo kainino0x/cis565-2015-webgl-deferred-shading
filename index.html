@@ -54,7 +54,7 @@
             z-index: 1000;
             display: none;
         }
-        #alerttext {
+        #alertbox {
             background-color: black;
             color: white;
             margin: auto auto;
@@ -63,7 +63,7 @@
             border: 2px solid white;
             position: relative;
             top: 200px;
-            width: 300px;
+            width: 750px;
         }
         #dlbutton {
             position: fixed;
@@ -88,9 +88,7 @@
         <button type="button" action="" onclick="downloadCanvas();">Screenshot</button>
     </div>
     <div id="alertcontainer">
-        <div id="alerttext">
-            Error!
-        </div>
+        <div id="alertbox"><pre id="alerttext"></pre></div>
     </div>
 </body>
 </html>
