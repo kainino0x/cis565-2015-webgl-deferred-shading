@@ -2,7 +2,7 @@ window.abort = (function() {
     'use strict';
     var first = false;
 
-    var f = function(s) {
+    return function(s) {
         var m = 'Fatal error: ' + s;
         if (!first) {
             $('#alertcontainer').css('display', 'block');
@@ -11,8 +11,6 @@ window.abort = (function() {
         }
         throw m;
     };
-
-    return f;
 })();
 
 window.loadTexture = (function() {
@@ -29,7 +27,7 @@ window.loadTexture = (function() {
         gl.bindTexture(gl.TEXTURE_2D, null);
     };
 
-    var f = function(url) {
+    return function(url) {
         return new Promise(function(resolve){
             var prom = Promise.resolve();
 
@@ -42,8 +40,6 @@ window.loadTexture = (function() {
             img.src = url;
         });
     };
-
-    return f;
 })();
 
 window.loadShaderProgram = (function() {
@@ -72,7 +68,7 @@ window.loadShaderProgram = (function() {
         return prog;
     };
 
-    var f = function(gl, urlVS, urlFS) {
+    return function(gl, urlVS, urlFS) {
         return Promise.all([$.get(urlVS), $.get(urlFS)])
             .then(function(results) {
                 var vs = results[0], fs = results[1];
@@ -81,8 +77,6 @@ window.loadShaderProgram = (function() {
                 return linkShader(gl, vs, fs);
             });
     };
-
-    return f;
 })();
 
 window.createAndBindDepthTargetTexture = function(fbo) {
@@ -140,7 +134,7 @@ window.renderFullScreenQuad = (function() {
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
     };
 
-    var f = function(prog) {
+    return function(prog) {
         if (!vbo) {
             init();
         }
@@ -152,8 +146,6 @@ window.renderFullScreenQuad = (function() {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
     };
-
-    return f;
 })();
 
 window.loadModel = function(obj, callback) {
@@ -174,7 +166,9 @@ window.loadModel = function(obj, callback) {
     loader.load(obj, callback, onProgress, onError);
 };
 
-window.drawModel = function(prog, m) {
+window.readyModelForDraw = function(prog, m) {
+    gl.useProgram(prog.prog);
+
     if (m.colmap) {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, m.colmap);
@@ -202,10 +196,10 @@ window.drawModel = function(prog, m) {
     }
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.idx);
-    gl.drawElements(gl.TRIANGLES, m.elemCount, gl.UNSIGNED_INT, 0);
+};
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+window.drawReadyModel = function(m) {
+    gl.drawElements(gl.TRIANGLES, m.elemCount, gl.UNSIGNED_INT, 0);
 };
 
 window.abortIfFramebufferIncomplete = function(fbo) {
@@ -215,3 +209,21 @@ window.abortIfFramebufferIncomplete = function(fbo) {
         abort('framebuffer incomplete: ' + WebGLDebugUtils.glEnumToString(fbstatus));
     }
 };
+
+window.downloadCanvas = (function() {
+    var downloadURI = function(uri, name) {
+        var link = document.createElement('a');
+        link.download = name;
+        link.href = uri;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    return function() {
+        var canvas = document.getElementById('canvas');
+        var time = Date.now();
+        var img = canvas.toDataURL('image/png');
+        downloadURI(img, 'deferred-' + time + '.png');
+    };
+})();

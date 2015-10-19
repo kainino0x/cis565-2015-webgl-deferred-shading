@@ -23,8 +23,11 @@ This is due at midnight on the evening of **INSTRUCTOR TODO**.
 shading and WebGL. You'll use GLSL and WebGL to implement a deferred shading
 pipeline and various lighting and visual effects.
 
-**Recommendation:**
+**Recommendations:**
 Take screenshots as you go. Use them to document your progress in your README!
+
+Read (or at least skim) the full README before you begin, so that you know what
+to expect and 
 
 ### Running the code
 
@@ -43,28 +46,52 @@ browser and video drivers.
 
 **Ask on the mailing list for any clarifications.**
 
-In this project, you are given the following code:
+In this project, you are given code for:
 
-* a
+* Loading OBJ files and textures
+* Camera control
+* Partial implementation of deferred shading
 
 You will need to implement the following features:
 
-* a
+* Blinn-Phong shading (diffuse + specular)
+* One of the following effects:
+  * Bloom [1]
+  * Toon shading (with ramp shading + edge detection for outlines)
+* Screen-space ambient occlusion [2]
+* Optimized g-buffer format
+  * e.g. pack values together, quantize values, use 2-component normals, etc.
+  * For credit, you must compare the performance of each permutation you test
+    while optimizing in a simple table.
 
-You are also required to implement at least X "points" worth in extra features.
-(point values are given in parentheses):
+You must do at least **8 points** worth of extra features.
 
-* a
+**INSTRUCTOR TODO:** review point values
+
+* (5pts) The effect you didn't choose above
+* (5pts) Motion blur [3]
+* (3pts) Two-pass Gaussian blur using separable convolution (using a second
+  postprocess render pass) to improve bloom performance
+* (5pts) Tile-based deferred shading with detailed performance comparison
+* (3pts) Scissor test optimization: when accumulating shading from each point
+  light source, only render in a rectangle around the light (must be correct).
+* Compare performance to normal forward-rendering with no optimizations and
+  with:
+  * (3pts) Coarse back-to-front sorting of geometry for early-z
+    * (Of course) must render many objects per frame to test
+  * (2pts) Z-prepass for early-z
 
 This extra feature list is not comprehensive. If you have a particular idea
 that you would like to implement, please **contact us first** (preferably on
 the mailing list).
 
-**IMPORTANT:**
-For each feature (required or extra), please provide the following brief analysis:
+**All togglable features should be switchable using the GUI panel.**
+
+**IMPORTANT:** For each feature (required or extra), please provide the
+following brief analysis:
 
 * Concise overview write-up of the feature.
-* Performance impact of adding the feature (whether slower or faster).
+* Performance hit/improvement due to adding the feature.
 * If you did something to accelerate the feature, what did you do and why?
 * How might this feature be optimized beyond your current implementation?
 
@@ -157,9 +184,12 @@ changes in a number of places:
 
 ## Resources
 
-* Bloom: [GPU Gems](http://http.developer.nvidia.com/GPUGems/gpugems_ch21.html) 
-* Screen Space Ambient Occlusion:
+* [1] Bloom:
+  [GPU Gems, Ch. 21](http://http.developer.nvidia.com/GPUGems/gpugems_ch21.html) 
+* [2] Screen-Space Ambient Occlusion:
   [Floored Article](http://floored.com/blog/2013/ssao-screen-space-ambient-occlusion.html)
+* [3] Post-Process Motion Blur:
+  [GPU Gems 3, Ch. 27](http://http.developer.nvidia.com/GPUGems3/gpugems3_ch27.html)
 
 
 ## README
@@ -176,10 +206,20 @@ Replace the contents of this README.md in a clear manner with the following:
 
 ### Performance Analysis
 
-Before doing performance analysis, you must disable debug mode by changing
-`debugMode` to `false` in `framework.js`.
+Analyze the performance on any features or optimizations that you implemented.
+What are the gains? What are the losses? Are there tradeoffs? How do parameters
+(such as number of lights, tile size, etc.) affect performance?
 
-**INSTRUCTOR TODO**
+**Required:** Optimize your JavaScript and/or GLSL code. Web Tracing Framework
+and Chrome/Firefox's profiling tools will be useful for this. For each change
+that improves performance, show the before and after render times.
+
+**Notes:**
+
+* Before doing performance analysis, you must disable debug mode by changing
+`debugMode` to `false` in `framework.js`.
+* Be aware that stats.js may give 0 millisecond frame timings in Chrome on
+occasion - if this happens, you can use the FPS counter.
 
 ### GitHub Pages
 

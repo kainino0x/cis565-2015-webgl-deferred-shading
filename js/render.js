@@ -2,6 +2,7 @@
     'use strict';
     var pass_copy = {};
     var pass_deferred = {};
+    var pass_post1 = {};
     var progCopy, progClear, progDeferred, progDebug, progPost1;
 
     var NUM_GBUFFERS = 4;
@@ -56,10 +57,19 @@
             return;
         }
 
-        // ----------------------------------
-        // 'copy' pass: Render into g-buffers
-        // ----------------------------------
+        pass_copy.render(state);
+        pass_deferred.render();
+        if (cfg && cfg.debugView >= 0) {
+            // Don't do any post-processing in debug mode
+            return;
+        }
+        pass_post1.render();
+    };
 
+    /**
+     * 'copy' pass: Render into g-buffers
+     */
+    pass_copy.render = function(state) {
         // * Bind the framebuffer pass_copy.fbo
         gl.bindFramebuffer(gl.FRAMEBUFFER, pass_copy.fbo);
 
@@ -74,21 +84,26 @@
         gl.useProgram(progCopy.prog);
         gl.uniformMatrix4fv(progCopy.u_cameraMat, false, state.cameraMat);
 
+        // * Draw the scene
         for (var i = 0; i < state.models.length; i++) {
-            drawModel(progCopy, state.models[i]);
+            var m = state.models[i];
+            readyModelForDraw(progCopy, m);
+            drawReadyModel(m);
         }
 
         // * Unbind the shader program
         gl.useProgram(null);
         // * Unbind the framebuffer object
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    };
 
-        // -----------------------------------------
-        // 'deferred' pass: Perform material shading
-        // -----------------------------------------
-
+    /**
+     * 'deferred' pass: Add lighting results for each individual light
+     */
+    pass_deferred.render = function() {
+        // * Pick a shader program based on whether debug views are enabled
         var prog;
-        if (cfg && cfg.enableDebug) {
+        if (cfg && cfg.debugView >= 0) {
             // Tell shader which debug view to use
             prog = progDebug;
             gl.useProgram(prog.prog);
@@ -102,11 +117,11 @@
             gl.bindFramebuffer(gl.FRAMEBUFFER, pass_deferred.fbo);
         }
 
-        // Clear the framebuffer depth
+        // * Clear the framebuffer depth
         gl.clearDepth(1.0);
         gl.clear(gl.DEPTH_BUFFER_BIT);
 
-        // Bind all of the g-buffers as texture inputs
+        // * Bind all of the g-buffers and depth buffer as texture inputs
         for (var i = 0; i < NUM_GBUFFERS; i++) {
             gl.activeTexture(gl['TEXTURE' + i]);
             gl.bindTexture(gl.TEXTURE_2D, pass_copy.gbufs[i]);
@@ -116,9 +131,10 @@
         gl.bindTexture(gl.TEXTURE_2D, pass_copy.depthTex);
         gl.uniform1i(prog.u_depth, NUM_GBUFFERS);
 
-        // Render a fullscreen quad to perform shading on
+        // * Render a fullscreen quad to perform shading on
         renderFullScreenQuad(prog);
 
+        // * Unbind everything
         for (var i = 0; i < NUM_GBUFFERS; i++) {
             gl.activeTexture(gl['TEXTURE' + i]);
             gl.bindTexture(gl.TEXTURE_2D, null);
@@ -128,29 +144,26 @@
 
         gl.useProgram(null);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    };
 
-        if (cfg && cfg.enableDebug) {
-            // Don't do any post-processing in debug mode
-            return;
-        }
-
-        // -----------------------------------------------------
-        // 'post1' pass: Perform (first) pass of post-processing
-        // -----------------------------------------------------
-
-        // Clear the framebuffer depth
+    /**
+     * 'post1' pass: Perform (first) pass of post-processing
+     */
+    pass_post1.render = function() {
+        // * Clear the framebuffer depth
         gl.clearDepth(1.0);
         gl.clear(gl.DEPTH_BUFFER_BIT);
         gl.useProgram(progPost1.prog);
 
-        // Bind the deferred pass's color output as a texture input
+        // * Bind the deferred pass's color output as a texture input
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, pass_deferred.colorTex);
         gl.uniform1i(progPost1.u_color, 0);
 
-        // Render a fullscreen quad to perform shading on
+        // * Render a fullscreen quad to perform shading on
         renderFullScreenQuad(progPost1);
 
+        // * Unbind everything
         for (var i = 0; i < NUM_GBUFFERS; i++) {
             gl.activeTexture(gl['TEXTURE' + i]);
             gl.bindTexture(gl.TEXTURE_2D, null);
@@ -161,11 +174,10 @@
         gl.useProgram(null);
     };
 
+    /**
+     * Loads all of the shader programs used in the pipeline.
+     */
     var loadAllShaderPrograms = function() {
-        // ----------------------
-        // Create shader programs
-        // ----------------------
-
         loadShaderProgram(gl, 'glsl/copy.vert.glsl', 'glsl/copy.frag.glsl').then(
             function(prog) {
                 // Create an object to hold info about this shader program

@@ -5,8 +5,7 @@ var cfg;
 
     var Cfg = function() {
         // TODO: Define config fields and defaults here
-        this.enableDebug = false;
-        this.debugView = 0;
+        this.debugView = -1;
         this.enableEffect0 = false;
     };
 
@@ -15,8 +14,8 @@ var cfg;
 
         var gui = new dat.GUI();
         // TODO: Define any other possible config values
-        gui.add(cfg, 'enableDebug');
         gui.add(cfg, 'debugView', {
+            'None':             -1,
             '0 Depth':           0,
             '1 Position':        1,
             '2 Geometry normal': 2,
