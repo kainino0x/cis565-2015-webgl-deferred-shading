@@ -73,7 +73,7 @@
             attachments.push(attachment);
         }
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, pass_copy.fbo);
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
             abort('framebuffer incomplete');
         }
@@ -87,6 +87,7 @@
         pass_deferred.colorTex = createAndBindColorTargetTexture(
             pass_deferred.fbo, gl_draw_buffers.COLOR_ATTACHMENT0_WEBGL);
 
+        gl.bindFramebuffer(gl.FRAMEBUFFER, pass_deferred.fbo);
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
             abort('framebuffer incomplete');
         }

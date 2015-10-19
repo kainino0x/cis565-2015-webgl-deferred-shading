@@ -36,23 +36,29 @@ var width, height;
     };
 
     var initExtensions = function() {
-        if (!gl.getExtension('OES_texture_float')) {
-            abort('unable to load extension: OES_texture_float');
-        }
-        if (!gl.getExtension('OES_texture_float_linear')) {
-            abort('unable to load extension: OES_texture_float');
-        }
-        if (!gl.getExtension('WEBGL_depth_texture')) {
-            abort('unable to load extension: WEBGL_depth_texture');
+        var extensions = gl.getSupportedExtensions();
+
+        var reqd = [
+            'OES_texture_float',
+            'OES_texture_float_linear',
+            'WEBGL_depth_texture',
+            'WEBGL_draw_buffers'
+        ];
+        console.log(extensions);
+        for (var i = 0; i < reqd.length; i++) {
+            var e = reqd[i];
+            if (extensions.indexOf(e) < 0) {
+                abort('unable to load extension: ' + e);
+            }
         }
 
+        gl.getExtension('OES_texture_float');
+        gl.getExtension('OES_texture_float_linear');
+        gl.getExtension('WEBGL_depth_texture');
+
         gl_draw_buffers = gl.getExtension('WEBGL_draw_buffers');
-        if (!gl_draw_buffers) {
-            abort('unable to load extension: WEBGL_draw_buffers');
-        } else {
-            var maxdb = gl.getParameter(gl_draw_buffers.MAX_DRAW_BUFFERS_WEBGL);
-            console.log('MAX_DRAW_BUFFERS_WEBGL: ' + maxdb);
-        }
+        var maxdb = gl.getParameter(gl_draw_buffers.MAX_DRAW_BUFFERS_WEBGL);
+        console.log('MAX_DRAW_BUFFERS_WEBGL: ' + maxdb);
     };
 
     var init = function() {
