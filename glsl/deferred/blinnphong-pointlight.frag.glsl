@@ -44,6 +44,6 @@ void main() {
     vec3 lightdiff = u_lightPos - pos;
     float lightdist = length(lightdiff);
     vec3 lightdir = lightdiff / lightdist;
-    vec3 diff = u_lightCol * max(0.0, dot(nor, lightdir)) * max(0.0, 5.0 - lightdist);
+    vec3 diff = u_lightCol * max(0.0, dot(nor, lightdir)) * max(0.0, 4.0 - lightdist);
     gl_FragColor = vec4(colmap * diff, 1.0);
 }

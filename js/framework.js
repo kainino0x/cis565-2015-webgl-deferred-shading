@@ -13,7 +13,7 @@ var width, height;
         camera.updateMatrixWorld();
         camera.matrixWorldInverse.getInverse(camera.matrixWorld);
         cameraMat.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-        window.deferredRender({
+        R.deferredRender({
             cameraMat: cameraMat.elements,
             models: models
         });
@@ -25,7 +25,9 @@ var width, height;
         render();
         gl.finish();
         stats.end();
-        requestAnimationFrame(update);
+        if (!aborted) {
+            requestAnimationFrame(update);
+        }
     };
 
     var resize = function() {
@@ -173,7 +175,7 @@ var width, height;
         resize();
         renderer.render(scene, camera);
 
-        window.deferredSetup();
+        R.deferredSetup();
 
         requestAnimationFrame(update);
     };

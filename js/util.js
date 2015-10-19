@@ -1,17 +1,15 @@
-window.abort = (function() {
+window.aborted = false;
+window.abort = function(s) {
     'use strict';
-    var first = false;
-
-    return function(s) {
-        var m = 'Fatal error: ' + s;
-        if (!first) {
-            $('#alertcontainer').css('display', 'block');
-            first = true;
-            $('#alerttext').text(m);
-        }
-        throw m;
-    };
-})();
+    var m = 'Fatal error: ' + s;
+    if (!aborted) {
+        $('#alertcontainer').css('display', 'block');
+        aborted = true;
+        $('#alerttext').text(m);
+    }
+    console.log(m);
+    throw m;
+};
 
 window.loadTexture = (function() {
     'use strict';
@@ -68,14 +66,14 @@ window.loadShaderProgram = (function() {
         return prog;
     };
 
-    return function(gl, urlVS, urlFS) {
-        return Promise.all([$.get(urlVS), $.get(urlFS)])
-            .then(function(results) {
+    return function(gl, urlVS, urlFS, callback) {
+        return Promise.all([$.get(urlVS), $.get(urlFS)]).then(
+            function(results) {
                 var vs = results[0], fs = results[1];
                 vs = compileShader(gl, vs, gl.VERTEX_SHADER);
                 fs = compileShader(gl, fs, gl.FRAGMENT_SHADER);
                 return linkShader(gl, vs, fs);
-            });
+            }).then(callback).catch(abort);
     };
 })();
 

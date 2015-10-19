@@ -97,9 +97,9 @@ following brief analysis:
 
 ### Starter Code Tour
 
-You'll be working in `js/render.js` using raw WebGL. While there is Three.js
-code in the project for other purposes, you probably won't find it useful for
-implementing your pipeline.
+You'll be working in `deferredSetup.js` and `deferredRender.js` using raw
+WebGL. While there is Three.js code in the project for other purposes, you
+probably won't find it useful for implementing your pipeline.
 
 It's highly recommended that you use the browser debugger to inspect variables
 to get familiar with the code. At any point, you can `console.log(some_var);`
@@ -107,9 +107,10 @@ to show it in the console and inspect it.
 
 * `js/`: JavaScript files for this project.
   * `main.js`: Handles initialization of other parts of the program.
-  * `framework.js`: Loads the scene, camera, etc., and calls the functions in
-    `render.js`. Hopefully, you won't need to change anything here.
-  * `render.js`: Your 
+  * `framework.js`: Loads the scene, camera, etc., and calls your setup/render
+    functions. Hopefully, you won't need to change anything here.
+  * `deferredSetup.js`: Your deferred shading pipeline setup code.
+  * `deferredRender.js`: Your deferred shading pipeline execution code.
   * `ui.js`: Defines the UI using
     [dat.GUI](https://workshop.chromeexperiments.com/examples/gui/).
     * The global variable `cfg` can be accessed anywhere in the code to read
@@ -139,7 +140,7 @@ to show it in the console and inspect it.
 
 ### The Deferred Shading Pipeline
 
-See the comments in `js/render.js` for low-level guidance.
+See the comments in `deferredSetup.js`/`deferredRender.js` for low-level guidance.
 
 **Pass 1:** Renders the scene geometry and its properties to the g-buffers.
 * `copy.vert.glsl`/`copy.frag.glsl`
@@ -176,7 +177,7 @@ them. However, if you want to change the total number of g-buffers (add more
 for additional effects or remove some for performance), you will need to make
 changes in a number of places:
 
-* `render.js`: search for `NUM_GBUFFERS`
+* `deferredSetup.js`/`deferredRender.js`: search for `NUM_GBUFFERS`
 * `copy.frag.glsl`
 * `deferred.frag.glsl`
 * `clear.frag.glsl`
