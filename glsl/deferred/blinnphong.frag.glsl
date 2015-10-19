@@ -11,8 +11,6 @@ uniform sampler2D u_depth;
 
 varying vec2 v_uv;
 
-const vec4 SKY_COLOR = vec4(0.66, 0.73, 1.0, 1.0);
-
 vec3 applyNormalMap(vec3 geomnor, vec3 normap) {
     normap = normap * 2.0 - 1.0;
     vec3 up = normalize(vec3(0.001, 1, 0.001));
@@ -36,7 +34,7 @@ void main() {
     // ----
 
     if (depth == 1.0) {
-        gl_FragColor = SKY_COLOR;
+        gl_FragColor = vec4(0, 0, 0, 0); // set alpha to 0
         return;
     }
 
@@ -47,5 +45,5 @@ void main() {
     float lightdist = length(lightdiff);
     vec3 lightdir = lightdiff / lightdist;
     vec3 diff = u_lightCol * max(0.0, dot(nor, lightdir)) * max(0.0, 5.0 - lightdist);
-    gl_FragColor = vec4(colmap * (vec3(0.2) + diff), 1.0);
+    gl_FragColor = vec4(colmap * diff, 1.0);
 }

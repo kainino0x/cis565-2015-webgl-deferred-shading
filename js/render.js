@@ -3,10 +3,13 @@
     var pass_copy = {};
     var pass_deferred = {};
     var pass_post1 = {};
-    var progCopy, progClear, progDeferred, progDebug, progPost1;
+    var progCopy, progClear, progAmbient, progBlinnPhong, progDebug, progPost1;
     var lights = [];
 
-    var NUM_LIGHTS = 10;
+    var light_min = [-6, 0, -14];
+    var light_max = [6, 18, 14];
+    var light_dt = -0.1;
+    var NUM_LIGHTS = 20;
     var NUM_GBUFFERS = 4;
 
     /**
@@ -18,8 +21,6 @@
         pass_copy.setup();
         pass_deferred.setup();
 
-        var light_min = [-6, 0, -14];
-        var light_max = [6, 12, 14];
         var posfn = function() {
             var r = [0, 0, 0];
             for (var i = 0; i < 3; i++) {
@@ -33,9 +34,9 @@
             lights.push({
                 pos: [posfn(), posfn(), posfn()],
                 col: [
-                    3 + Math.random() * 5,
-                    3 + Math.random() * 5,
-                    3 + Math.random() * 5]
+                    1 + Math.random(),
+                    1 + Math.random(),
+                    1 + Math.random()]
             });
         }
     };
@@ -84,8 +85,19 @@
     };
 
     window.deferredRender = function(state) {
-        if (!(progPost1 && progDeferred && progDebug && progClear)) {
+        if (!(progPost1 &&
+              progAmbient &&
+              progBlinnPhong &&
+              progDebug &&
+              progClear)) {
             return;
+        }
+
+        // Move the lights
+        for (var i = 0; i < lights.length; i++) {
+            var mn = light_min[1];
+            var mx = light_max[1];
+            lights[i].pos[1] = (lights[i].pos[1] + light_dt - mn + mx) % mx + mn;
         }
 
         pass_copy.render(state);
@@ -128,29 +140,8 @@
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     };
 
-    /**
-     * 'deferred' pass: Add lighting results for each individual light
-     */
-    pass_deferred.render = function() {
-        // * Pick a shader program based on whether debug views are enabled
-        var prog;
-        if (cfg && cfg.debugView >= 0) {
-            // Tell shader which debug view to use
-            prog = progDebug;
-            gl.useProgram(prog.prog);
-            gl.uniform1i(prog.u_debug, cfg.debugView);
-
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        } else {
-            prog = progDeferred;
-            gl.useProgram(prog.prog);
-
-            gl.bindFramebuffer(gl.FRAMEBUFFER, pass_deferred.fbo);
-        }
-
-        // * Clear the framebuffer depth
-        gl.clearDepth(1.0);
-        gl.clear(gl.DEPTH_BUFFER_BIT);
+    var bindLightPass = function(prog) {
+        gl.useProgram(prog.prog);
 
         // * Bind all of the g-buffers and depth buffer as texture inputs
         for (var i = 0; i < NUM_GBUFFERS; i++) {
@@ -161,19 +152,49 @@
         gl.activeTexture(gl['TEXTURE' + NUM_GBUFFERS]);
         gl.bindTexture(gl.TEXTURE_2D, pass_copy.depthTex);
         gl.uniform1i(prog.u_depth, NUM_GBUFFERS);
+    };
+
+    /**
+     * 'deferred' pass: Add lighting results for each individual light
+     */
+    pass_deferred.render = function() {
+        // * Pick a shader program based on whether debug views are enabled
+        var prog;
+        if (cfg && cfg.debugView >= 0) {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        } else {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, pass_deferred.fbo);
+        }
+
+        // * Clear the framebuffer depth
+        gl.clearColor(0, 0, 0, 1);
+        gl.clearDepth(1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         // * Render a fullscreen quad to perform shading on
         if (cfg && cfg.debugView >= 0) {
+            // Tell shader which debug view to use
+            bindLightPass(progDebug);
+            gl.uniform1i(progDebug.u_debug, cfg.debugView);
             renderFullScreenQuad(prog);
         } else {
             // * Render it once for each light, if not debugging
-            gl.blendFunc(gl.ONE, gl.ONE);
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
+            // * Light using ambient light
+            bindLightPass(progAmbient);
+            renderFullScreenQuad(progAmbient);
+
+            // * Light using Blinn-Phong lighting
+            bindLightPass(progBlinnPhong);
             for (var i = 0; i < lights.length; i++) {
-                gl.uniform3fv(prog.u_lightPos, lights[i].pos);
-                gl.uniform3fv(prog.u_lightCol, lights[i].col);
-                renderFullScreenQuad(prog);
-                // INSTRUCTOR TODO: does not actually seem to be adding multiple lights
+                gl.uniform3fv(progBlinnPhong.u_lightPos, lights[i].pos);
+                gl.uniform3fv(progBlinnPhong.u_lightCol, lights[i].col);
+                renderFullScreenQuad(progBlinnPhong);
             }
+
+            gl.disable(gl.BLEND);
         }
 
         // * Unbind everything
@@ -216,6 +237,27 @@
         gl.useProgram(null);
     };
 
+    var loadDeferredProgram = function(name, callback) {
+        loadShaderProgram(gl, 'glsl/quad.vert.glsl',
+                          'glsl/deferred/' + name + '.frag.glsl').then(
+            function(prog) {
+                // Create an object to hold info about this shader program
+                var p = { prog: prog };
+
+                // Retrieve the uniform and attribute locations
+                p.u_lightCol = gl.getUniformLocation(prog, 'u_lightCol');
+                p.u_lightPos = gl.getUniformLocation(prog, 'u_lightPos');
+                p.u_gbufs = [];
+                for (var i = 0; i < NUM_GBUFFERS; i++) {
+                    p.u_gbufs[i] = gl.getUniformLocation(prog, 'u_gbufs[' + i + ']');
+                }
+                p.u_depth    = gl.getUniformLocation(prog, 'u_depth');
+                p.a_position = gl.getAttribLocation(prog, 'a_position');
+
+                callback(p);
+            });
+    }
+
     /**
      * Loads all of the shader programs used in the pipeline.
      */
@@ -243,24 +285,15 @@
                 progClear = { prog: prog };
             });
 
-        loadShaderProgram(gl, 'glsl/quad.vert.glsl', 'glsl/deferred.frag.glsl').then(
-            function(prog) {
-                // Create an object to hold info about this shader program
-                var p = { prog: prog };
+        loadDeferredProgram('ambient', function(p) {
+            // Save the object into this variable for access later
+            progAmbient = p;
+        });
 
-                // Retrieve the uniform and attribute locations
-                p.u_lightCol = gl.getUniformLocation(prog, 'u_lightCol');
-                p.u_lightPos = gl.getUniformLocation(prog, 'u_lightPos');
-                p.u_gbufs = [];
-                for (var i = 0; i < NUM_GBUFFERS; i++) {
-                    p.u_gbufs[i] = gl.getUniformLocation(prog, 'u_gbufs[' + i + ']');
-                }
-                p.u_depth    = gl.getUniformLocation(prog, 'u_depth');
-                p.a_position = gl.getAttribLocation(prog, 'a_position');
-
-                // Save the object into this variable for access later
-                progDeferred = p;
-            });
+        loadDeferredProgram('blinnphong', function(p) {
+            // Save the object into this variable for access later
+            progBlinnPhong = p;
+        });
 
         loadShaderProgram(gl, 'glsl/quad.vert.glsl', 'glsl/debug.frag.glsl').then(
             function(prog) {
