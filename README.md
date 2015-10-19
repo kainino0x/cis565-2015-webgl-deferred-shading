@@ -58,27 +58,47 @@ You will need to implement the following features:
 * One of the following effects:
   * Bloom [1]
   * Toon shading (with ramp shading + edge detection for outlines)
-* Screen-space ambient occlusion [2]
 * Optimized g-buffer format
   * e.g. pack values together, quantize values, use 2-component normals, etc.
   * For credit, you must compare the performance of each permutation you test
     while optimizing in a simple table.
+* Scissor test optimization: when accumulating shading from each point
+  light source, only render in a rectangle around the light.
 
 You must do at least **8 points** worth of extra features.
 
 **INSTRUCTOR TODO:** review point values
 
-* (5pts) The effect you didn't choose above
-* (5pts) Motion blur [3]
+* (4pts) The effect you didn't choose above
+* (3pts) Screen-space ambient occlusion [2]
+* (4pts) Motion blur [3]
 * (3pts) Two-pass Gaussian blur using separable convolution (using a second
   postprocess render pass) to improve bloom performance
-* (5pts) Tile-based deferred shading with detailed performance comparison
-* (3pts) Scissor test optimization: when accumulating shading from each point
-  light source, only render in a rectangle around the light (must be correct).
-* Compare performance to normal forward-rendering with no optimizations and
-  with:
-  * (3pts) Coarse back-to-front sorting of geometry for early-z
-    * (Of course) must render many objects per frame to test
+
+* (6pts) Tile-based deferred shading with detailed performance comparison
+  * On the CPU, check which lights overlap which tiles. Then, render each tile
+    just once for all lights (instead of once for each light), applying only
+    the overlapping lights.
+
+* (5pts) Deferred shading without multiple render targets (i.e. without
+  WEBGL_draw_buffers).
+  * Render the scene once for each target g-buffer, each time into a different
+    framebuffer object.
+  * Include a detailed performance analysis (for different models), comparing
+    with/without WEBGL_draw_buffers.
+
+* Light proxies
+  * (4pts) Instead of rendering a full-screen quad for every light, render some
+    proxy geometry which covers the part of the screen affected by the light
+    (e.g. a sphere, for an attenuated point light).
+  * (+3pts) To avoid lighting geometry far behind the light, use an
+    inverted depth test (`gl.depthFunc(gl.GREATER)`) with depth writing
+    disabled (`gl.depthMask`)
+
+* Compare performance to equivalently-lit forward-rendering:
+  * (2pts) With no forward-rendering optimizations
+  * (3pts) Coarse, per-object back-to-front sorting of geometry for early-z
+    * (Of course) must render many objects to test
   * (2pts) Z-prepass for early-z
 
 This extra feature list is not comprehensive. If you have a particular idea
@@ -143,20 +163,21 @@ to show it in the console and inspect it.
 See the comments in `deferredSetup.js`/`deferredRender.js` for low-level guidance.
 
 **Pass 1:** Renders the scene geometry and its properties to the g-buffers.
-* `copy.vert.glsl`/`copy.frag.glsl`
+* `copy.vert.glsl`, `copy.frag.glsl`
 * The framebuffer object `pass_copy.fbo` must be bound during this pass.
 * Renders into `pass_copy.depthTex` and `pass_copy.gbufs[i]`, which need to be
   attached to the framebuffer.
 
 **Pass 2:** Performs lighting and shading into the color buffer.
-* `quad.vert.glsl`/`deferred.frag.glsl`
+* `quad.vert.glsl`, `deferred/blinnphong-pointlight.frag.glsl`
 * Takes the g-buffers `pass_copy.gbufs`/`depthTex` as texture inputs to the
   fragment shader, on uniforms `u_gbufs` and `u_depth`.
 * `pass_deferred.fbo` must be bound.
 * Renders into `pass_deferred.colorTex`.
 
 **Pass 3:** Performs post-processing.
-* Takes `pass_deferred.colorTex` as a texture input `u_color`.
+* `quad.vert.glsl`, `post/one.frag.glsl`
+* Takes `pass_BlinnPhong_PointLight.colorTex` as a texture input `u_color`.
 * Renders directly to the screen if there are no additional passes.
 
 More passes may be added for additional effects (e.g. combining bloom with
@@ -191,6 +212,8 @@ changes in a number of places:
   [Floored Article](http://floored.com/blog/2013/ssao-screen-space-ambient-occlusion.html)
 * [3] Post-Process Motion Blur:
   [GPU Gems 3, Ch. 27](http://http.developer.nvidia.com/GPUGems3/gpugems3_ch27.html)
+
+**Also see:** The articles linked in the course schedule.
 
 
 ## README

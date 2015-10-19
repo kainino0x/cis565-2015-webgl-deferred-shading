@@ -21,6 +21,7 @@ vec3 applyNormalMap(vec3 geomnor, vec3 normap) {
 
 void main() {
     // Load properties from the g-buffers
+    // TODO: optimize g-buffers
     vec4 gb0 = texture2D(u_gbufs[0], v_uv);
     vec4 gb1 = texture2D(u_gbufs[1], v_uv);
     vec4 gb2 = texture2D(u_gbufs[2], v_uv);
@@ -38,7 +39,8 @@ void main() {
         return;
     }
 
-    gl_FragColor = vec4(1, 0, 1, 1);  // magenta
+    gl_FragColor = vec4(0, 0, 1, 1);  // blue
+    // TODO
 
     //diff += u_lightCol[i] * dot(nor, u_lightPos[i] - pos);
     vec3 lightdiff = u_lightPos - pos;
