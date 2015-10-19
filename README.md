@@ -17,7 +17,7 @@ WebGL Deferred Shading
 Instructions (delete me)
 ========================
 
-This is due at midnight on the evening of **INSTRUCTOR TODO**.
+This is due at midnight on the evening of Sunday, October 25.
 
 **Summary:** In this project, you'll be introduced to the basics of deferred
 shading and WebGL. You'll use GLSL and WebGL to implement a deferred shading
@@ -77,7 +77,7 @@ You must do at least **8 points** worth of extra features.
   light source, only render in a rectangle around the light (must be correct).
 * Compare performance to normal forward-rendering with no optimizations and
   with:
-  * (3pts) Coarse back-to-front sorting of geometry for early-z
+  * (3pts) Coarse front-to-back sorting of geometry for early-z
     * (Of course) must render many objects per frame to test
   * (2pts) Z-prepass for early-z
 
