@@ -3,8 +3,8 @@ precision highp float;
 precision highp int;
 
 #define NUM_GBUFFERS 4
-#define NUM_LIGHTS 1
 
+uniform int u_debug;
 uniform sampler2D u_gbufs[NUM_GBUFFERS];
 uniform sampler2D u_depth;
 
@@ -34,20 +34,19 @@ void main() {
     vec3 nor = applyNormalMap(geomnor, normap);
     // ----
 
-    if (depth == 1.0) {
-        gl_FragColor = SKY_COLOR;
-        return;
+    if (u_debug == 0) {
+        gl_FragColor = vec4(vec3(depth), 1.0);
+    } else if (u_debug == 1) {
+        gl_FragColor = vec4(abs(pos) * 0.1, 1.0);
+    } else if (u_debug == 2) {
+        gl_FragColor = vec4(abs(geomnor), 1.0);
+    } else if (u_debug == 3) {
+        gl_FragColor = vec4(colmap, 1.0);
+    } else if (u_debug == 4) {
+        gl_FragColor = vec4(normap, 1.0);
+    } else if (u_debug == 5) {
+        gl_FragColor = vec4(abs(nor), 1.0);
+    } else {
+        gl_FragColor = vec4(1, 0, 1, 1);
     }
-
-    gl_FragColor = vec4(1, 0, 1, 1);  // magenta
-
-    vec3 diff = vec3(0.0);
-    for (int i = 0; i < NUM_LIGHTS; i++) {
-        //diff += u_lightCol[i] * dot(nor, u_lightPos[i] - pos);
-        vec3 lightdiff = vec3(0.0, 5.0, 0.0) - pos;
-        float lightdist = length(lightdiff);
-        vec3 lightdir = lightdiff / lightdist;
-        diff += vec3(5.0) * max(0.0, dot(nor, lightdir)) / lightdist;
-    }
-    gl_FragColor = vec4(colmap * (vec3(0.2) + diff), 1.0);
 }

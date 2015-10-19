@@ -18,7 +18,6 @@
 
     <script src="js/util.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/model.js"></script>
     <script src="js/render.js"></script>
     <script src="js/framework.js"></script>
     <script src="js/ui.js"></script>
@@ -34,7 +33,6 @@
         }
         #debugmodewarning {
             text-align: center;
-            font-weight: bold;
             font-family: sans-serif;
             background-color: #000000;
             color: #ffff00;
@@ -42,17 +40,43 @@
             bottom: 0px;
             left: 0px;
             width: 100%;
+            display: none;
+        }
+        #alertcontainer {
+            font-family: sans-serif;
+            background-color: rgba(0, 0, 0, 0.6);
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            height: 100%;
             display: block;
-            visibility: hidden;
+            z-index: 1000;
+            display: none;
+        }
+        #alerttext {
+            background-color: black;
+            color: white;
+            margin: auto auto;
+            padding: 1em;
+            border-radius: 1em;
+            border: 2px solid white;
+            position: relative;
+            top: 200px;
+            width: 300px;
         }
     </style>
 </head>
 <body>
     <canvas id="canvas" width="800px" height="600px"></canvas>
     <div id="debugmodewarning">
-        <span style="font-size: 200%">DEBUG MODE!</span>
-        Debug mode is very slow &ndash; disable
-        <code>debugMode</code> in <code>framework.js</code>.
+        <strong style="font-size: 150%">DEBUG MODE!</strong>
+        (Disable before measuring performance.)
+    </div>
+    <div id="alertcontainer">
+        <div id="alerttext">
+            Error!
+        </div>
     </div>
 </body>
 </html>

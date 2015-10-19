@@ -2,68 +2,23 @@
     'use strict';
     var pass_copy = {};
     var pass_deferred = {};
-    var progCopy, progClear, progDeferred, progPost1;
+    var progCopy, progClear, progDeferred, progDebug, progPost1;
 
     var NUM_GBUFFERS = 4;
 
     window.deferredSetup = function() {
-        console.log('setup: ' + width + ' x ' + height);
-
-        // ----------------------
-        // Create shader programs
-        // ----------------------
-
-        loadShaderProgram(gl, 'glsl/copy.vert.glsl', 'glsl/copy.frag.glsl').then(
-            function(prog) {
-                var p = { prog: prog };
-
-                p.u_cameraMat = gl.getUniformLocation(prog, 'u_cameraMat');
-                p.u_colmap    = gl.getUniformLocation(prog, 'u_colmap');
-                p.u_normap    = gl.getUniformLocation(prog, 'u_normap');
-                p.a_position  = gl.getAttribLocation(prog, 'a_position');
-                p.a_normal    = gl.getAttribLocation(prog, 'a_normal');
-                p.a_uv        = gl.getAttribLocation(prog, 'a_uv');
-
-                progCopy = p;
-            });
-
-        loadShaderProgram(gl, 'glsl/quad.vert.glsl', 'glsl/clear.frag.glsl').then(
-            function(prog) {
-                progClear = { prog: prog };
-            });
-
-        loadShaderProgram(gl, 'glsl/quad.vert.glsl', 'glsl/deferred.frag.glsl').then(
-            function(prog) {
-                var p = { prog: prog };
-
-                p.u_debug    = gl.getUniformLocation(prog, 'u_debug');
-                p.u_gbuf = [];
-                for (var i = 0; i < NUM_GBUFFERS; i++) {
-                    p.u_gbuf[i] = gl.getUniformLocation(prog, 'u_gbuf[' + i + ']');
-                }
-                p.u_depth    = gl.getUniformLocation(prog, 'u_depth');
-                p.a_position = gl.getAttribLocation(prog, 'a_position');
-
-                progDeferred = p;
-            });
-
-        loadShaderProgram(gl, 'glsl/quad.vert.glsl', 'glsl/post1.frag.glsl').then(
-            function(prog) {
-                var p = { prog: prog };
-
-                p.u_color    = gl.getUniformLocation(prog, 'u_color');
-                p.a_position = gl.getAttribLocation(prog, 'a_position');
-
-                progPost1 = p;
-            });
+        loadAllShaderPrograms();
 
         // -----------------------------------------------------------------
         // Create/configure framebuffer between "copy" and "deferred" stages
         // -----------------------------------------------------------------
 
+        // * Create the FBO
         pass_copy.fbo = gl.createFramebuffer();
+        // * Create, bind, and store a depth target texture for the FBO
         pass_copy.depthTex = createAndBindDepthTargetTexture(pass_copy.fbo);
 
+        // * Create, bind, and store "color" target textures for the FBO
         pass_copy.gbufs = [];
         var attachments = [];
         for (var i = 0; i < NUM_GBUFFERS; i++) {
@@ -73,29 +28,31 @@
             attachments.push(attachment);
         }
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, pass_copy.fbo);
-        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-            abort('framebuffer incomplete');
-        }
+        // * Check for framebuffer errors
+        abortIfFramebufferIncomplete(pass_copy.fbo);
+        // * Tell the WEBGL_draw_buffers extension which FBO attachments are
+        //   being used. (This extension allows for multiple render targets.)
         gl_draw_buffers.drawBuffersWEBGL(attachments);
 
         // ------------------------------------------------------------------
         // Create/configure framebuffer between "deferred" and "post1" stages
         // ------------------------------------------------------------------
 
+        // * Create the FBO
         pass_deferred.fbo = gl.createFramebuffer();
+        // * Create, bind, and store a single color target texture for the FBO
         pass_deferred.colorTex = createAndBindColorTargetTexture(
             pass_deferred.fbo, gl_draw_buffers.COLOR_ATTACHMENT0_WEBGL);
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, pass_deferred.fbo);
-        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-            abort('framebuffer incomplete');
-        }
+        // * Check for framebuffer errors
+        abortIfFramebufferIncomplete(pass_deferred.fbo);
+        // * Tell the WEBGL_draw_buffers extension which FBO attachments are
+        //   being used. (This extension allows for multiple render targets.)
         gl_draw_buffers.drawBuffersWEBGL([gl_draw_buffers.COLOR_ATTACHMENT0_WEBGL]);
     };
 
     window.deferredRender = function(state) {
-        if (!progPost1 || !progDeferred || !progClear) {
+        if (!(progPost1 && progDeferred && progDebug && progClear)) {
             return;
         }
 
@@ -103,85 +60,64 @@
         // 'copy' pass: Render into g-buffers
         // ----------------------------------
 
+        // * Bind the framebuffer pass_copy.fbo
         gl.bindFramebuffer(gl.FRAMEBUFFER, pass_copy.fbo);
 
-        // Clear the framebuffer
+        // * Clear screen using progClear
         gl.useProgram(progClear.prog);
         renderFullScreenQuad(progClear);
+        // * Clear depth buffer using gl.clear
         gl.clearDepth(1.0);
         gl.clear(gl.DEPTH_BUFFER_BIT);
 
+        // * Use the program progCopy.prog
         gl.useProgram(progCopy.prog);
         gl.uniformMatrix4fv(progCopy.u_cameraMat, false, state.cameraMat);
 
         for (var i = 0; i < state.models.length; i++) {
-            var m = state.models[i];
-
-            if (m.colmap) {
-                gl.activeTexture(gl.TEXTURE0);
-                gl.bindTexture(gl.TEXTURE_2D, m.colmap);
-                gl.uniform1i(progCopy.u_colmap, 0);
-            }
-            if (m.normap) {
-                gl.activeTexture(gl.TEXTURE1);
-                gl.bindTexture(gl.TEXTURE_2D, m.normap);
-                gl.uniform1i(progCopy.u_normap, 1);
-            }
-
-            gl.enableVertexAttribArray(progCopy.a_position);
-            gl.bindBuffer(gl.ARRAY_BUFFER, m.position);
-            gl.vertexAttribPointer(progCopy.a_position, 3, gl.FLOAT, false, 0, 0);
-
-            if (progCopy.a_normal !== -1) {
-                gl.enableVertexAttribArray(progCopy.a_normal);
-                gl.bindBuffer(gl.ARRAY_BUFFER, m.normal);
-                gl.vertexAttribPointer(progCopy.a_normal, 3, gl.FLOAT, false, 0, 0);
-            }
-            if (progCopy.a_uv !== -1) {
-                gl.enableVertexAttribArray(progCopy.a_uv);
-                gl.bindBuffer(gl.ARRAY_BUFFER, m.uv);
-                gl.vertexAttribPointer(progCopy.a_uv, 2, gl.FLOAT, false, 0, 0);
-            }
-
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.idx);
-            gl.drawElements(gl.TRIANGLES, m.elemCount, gl.UNSIGNED_INT, 0);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, null);
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+            drawModel(progCopy, state.models[i]);
         }
 
+        // * Unbind the shader program
         gl.useProgram(null);
+        // * Unbind the framebuffer object
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
         // -----------------------------------------
         // 'deferred' pass: Perform material shading
         // -----------------------------------------
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, pass_deferred.fbo);
+        var prog;
+        if (cfg && cfg.enableDebug) {
+            // Tell shader which debug view to use
+            prog = progDebug;
+            gl.useProgram(prog.prog);
+            gl.uniform1i(prog.u_debug, cfg.debugView);
 
-        // Clear the framebuffer
-        gl.clearColor(0.66, 0.73, 1.0, 1.0);
-        gl.clearDepth(1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        gl.useProgram(progDeferred.prog);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        } else {
+            prog = progDeferred;
+            gl.useProgram(prog.prog);
 
-        // Tell shader which debug view to use
-        if (cfg) {
-            gl.uniform1i(progDeferred.u_debug, cfg.debug);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, pass_deferred.fbo);
         }
+
+        // Clear the framebuffer depth
+        gl.clearDepth(1.0);
+        gl.clear(gl.DEPTH_BUFFER_BIT);
 
         // Bind all of the g-buffers as texture inputs
         for (var i = 0; i < NUM_GBUFFERS; i++) {
             gl.activeTexture(gl['TEXTURE' + i]);
             gl.bindTexture(gl.TEXTURE_2D, pass_copy.gbufs[i]);
-            gl.uniform1i(progDeferred.u_gbuf[i], i);
+            gl.uniform1i(prog.u_gbufs[i], i);
         }
         gl.activeTexture(gl['TEXTURE' + NUM_GBUFFERS]);
         gl.bindTexture(gl.TEXTURE_2D, pass_copy.depthTex);
-        gl.uniform1i(progDeferred.u_depth, NUM_GBUFFERS);
+        gl.uniform1i(prog.u_depth, NUM_GBUFFERS);
 
         // Render a fullscreen quad to perform shading on
-        renderFullScreenQuad(progDeferred);
+        renderFullScreenQuad(prog);
 
         for (var i = 0; i < NUM_GBUFFERS; i++) {
             gl.activeTexture(gl['TEXTURE' + i]);
@@ -193,14 +129,18 @@
         gl.useProgram(null);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
+        if (cfg && cfg.enableDebug) {
+            // Don't do any post-processing in debug mode
+            return;
+        }
+
         // -----------------------------------------------------
         // 'post1' pass: Perform (first) pass of post-processing
         // -----------------------------------------------------
 
-        // Clear the framebuffer
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        // Clear the framebuffer depth
         gl.clearDepth(1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.clear(gl.DEPTH_BUFFER_BIT);
         gl.useProgram(progPost1.prog);
 
         // Bind the deferred pass's color output as a texture input
@@ -219,5 +159,85 @@
         gl.bindTexture(gl.TEXTURE_2D, null);
 
         gl.useProgram(null);
+    };
+
+    var loadAllShaderPrograms = function() {
+        // ----------------------
+        // Create shader programs
+        // ----------------------
+
+        loadShaderProgram(gl, 'glsl/copy.vert.glsl', 'glsl/copy.frag.glsl').then(
+            function(prog) {
+                // Create an object to hold info about this shader program
+                var p = { prog: prog };
+
+                // Retrieve the uniform and attribute locations
+                p.u_cameraMat = gl.getUniformLocation(prog, 'u_cameraMat');
+                p.u_colmap    = gl.getUniformLocation(prog, 'u_colmap');
+                p.u_normap    = gl.getUniformLocation(prog, 'u_normap');
+                p.a_position  = gl.getAttribLocation(prog, 'a_position');
+                p.a_normal    = gl.getAttribLocation(prog, 'a_normal');
+                p.a_uv        = gl.getAttribLocation(prog, 'a_uv');
+
+                // Save the object into this variable for access later
+                progCopy = p;
+            });
+
+        loadShaderProgram(gl, 'glsl/quad.vert.glsl', 'glsl/clear.frag.glsl').then(
+            function(prog) {
+                // Create an object to hold info about this shader program
+                progClear = { prog: prog };
+            });
+
+        loadShaderProgram(gl, 'glsl/quad.vert.glsl', 'glsl/deferred.frag.glsl').then(
+            function(prog) {
+                // Create an object to hold info about this shader program
+                var p = { prog: prog };
+
+                // Retrieve the uniform and attribute locations
+                p.u_enableEffect0 = gl.getUniformLocation(prog, 'u_enableEffect0');
+                p.u_gbufs = [];
+                for (var i = 0; i < NUM_GBUFFERS; i++) {
+                    p.u_gbufs[i] = gl.getUniformLocation(prog, 'u_gbufs[' + i + ']');
+                }
+                p.u_depth    = gl.getUniformLocation(prog, 'u_depth');
+                p.a_position = gl.getAttribLocation(prog, 'a_position');
+
+                // Save the object into this variable for access later
+                progDeferred = p;
+            });
+
+        loadShaderProgram(gl, 'glsl/quad.vert.glsl', 'glsl/debug.frag.glsl').then(
+            function(prog) {
+                // Create an object to hold info about this shader program
+                var p = { prog: prog };
+
+                // Retrieve the uniform and attribute locations
+                p.u_debug    = gl.getUniformLocation(prog, 'u_debug');
+                p.u_gbufs = [];
+                for (var i = 0; i < NUM_GBUFFERS; i++) {
+                    p.u_gbufs[i] = gl.getUniformLocation(prog, 'u_gbufs[' + i + ']');
+                }
+                p.u_depth    = gl.getUniformLocation(prog, 'u_depth');
+                p.a_position = gl.getAttribLocation(prog, 'a_position');
+
+                // Save the object into this variable for access later
+                progDebug = p;
+            });
+
+        loadShaderProgram(gl, 'glsl/quad.vert.glsl', 'glsl/post1.frag.glsl').then(
+            function(prog) {
+                // Create an object to hold info about this shader program
+                var p = { prog: prog };
+
+                // Retrieve the uniform and attribute locations
+                p.u_color    = gl.getUniformLocation(prog, 'u_color');
+                p.a_position = gl.getAttribLocation(prog, 'a_position');
+
+                // Save the object into this variable for access later
+                progPost1 = p;
+            });
+
+        // TODO: If you add more passes, load and set up their shader programs.
     };
 })();

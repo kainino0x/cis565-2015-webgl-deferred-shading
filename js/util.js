@@ -3,11 +3,11 @@ window.abort = (function() {
     var first = false;
 
     var f = function(s) {
-        var m = 'fatal error: ' + s;
-        console.error(m);
+        var m = 'Fatal error: ' + s;
         if (!first) {
+            $('#alertcontainer').css('display', 'block');
             first = true;
-            alert('Fatal error! (see console)');
+            $('#alerttext').html(m);
         }
         throw m;
     };
@@ -155,3 +155,63 @@ window.renderFullScreenQuad = (function() {
 
     return f;
 })();
+
+window.loadModel = function(obj, callback) {
+    'use strict';
+
+    var onProgress = function(xhr) {
+        if (xhr.lengthComputable) {
+            var percentComplete = xhr.loaded / xhr.total * 100;
+            console.log(Math.round(percentComplete, 2) + '% downloaded');
+        }
+    };
+
+    var onError = function(xhr) {
+        console.log("Failed to load model");
+    };
+
+    var loader = new THREE.OBJLoader();
+    loader.load(obj, callback, onProgress, onError);
+};
+
+window.drawModel = function(prog, m) {
+    if (m.colmap) {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, m.colmap);
+        gl.uniform1i(prog.u_colmap, 0);
+    }
+    if (m.normap) {
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, m.normap);
+        gl.uniform1i(prog.u_normap, 1);
+    }
+
+    gl.enableVertexAttribArray(prog.a_position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, m.position);
+    gl.vertexAttribPointer(prog.a_position, 3, gl.FLOAT, false, 0, 0);
+
+    if (prog.a_normal !== -1 && m.normal) {
+        gl.enableVertexAttribArray(prog.a_normal);
+        gl.bindBuffer(gl.ARRAY_BUFFER, m.normal);
+        gl.vertexAttribPointer(prog.a_normal, 3, gl.FLOAT, false, 0, 0);
+    }
+    if (prog.a_uv !== -1 && m.uv) {
+        gl.enableVertexAttribArray(prog.a_uv);
+        gl.bindBuffer(gl.ARRAY_BUFFER, m.uv);
+        gl.vertexAttribPointer(prog.a_uv, 2, gl.FLOAT, false, 0, 0);
+    }
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.idx);
+    gl.drawElements(gl.TRIANGLES, m.elemCount, gl.UNSIGNED_INT, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+};
+
+window.abortIfFramebufferIncomplete = function(fbo) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    var fbstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (fbstatus !== gl.FRAMEBUFFER_COMPLETE) {
+        abort('framebuffer incomplete: ' + WebGLDebugUtils.glEnumToString(fbstatus));
+    }
+};

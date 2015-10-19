@@ -70,7 +70,7 @@ var width, height;
         var debugMode = true;
 
         if (debugMode) {
-            $('#debugmodewarning').css('visibility', 'visible');
+            $('#debugmodewarning').css('display', 'block');
             var throwOnGLError = function(err, funcName, args) {
                 abort(WebGLDebugUtils.glEnumToString(err) +
                     " was caused by call to: " + funcName);
@@ -108,7 +108,7 @@ var width, height;
         controls.panSpeed = 2.0;
 
         // CHECKITOUT: Load mesh and textures
-        loadModel('objs/sponza/sponza.obj', function(o) {
+        loadModel('models/sponza/sponza.obj', function(o) {
             scene.add(o);
             for (var i = 0; i < o.children.length; i++) {
                 var c = o.children[i];
@@ -119,13 +119,19 @@ var width, height;
                 gl.bindBuffer(gl.ARRAY_BUFFER, gposition);
                 gl.bufferData(gl.ARRAY_BUFFER, g.position.array, gl.STATIC_DRAW);
 
-                var gnormal = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, gnormal);
-                gl.bufferData(gl.ARRAY_BUFFER, g.normal.array, gl.STATIC_DRAW);
+                var gnormal;
+                if (g.normal && g.normal.array) {
+                    gnormal = gl.createBuffer();
+                    gl.bindBuffer(gl.ARRAY_BUFFER, gnormal);
+                    gl.bufferData(gl.ARRAY_BUFFER, g.normal.array, gl.STATIC_DRAW);
+                }
 
-                var guv = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, guv);
-                gl.bufferData(gl.ARRAY_BUFFER, g.uv.array, gl.STATIC_DRAW);
+                var guv;
+                if (g.uv && g.uv.array) {
+                    guv = gl.createBuffer();
+                    gl.bindBuffer(gl.ARRAY_BUFFER, guv);
+                    gl.bufferData(gl.ARRAY_BUFFER, g.uv.array, gl.STATIC_DRAW);
+                }
 
                 if (!idx) {
                     idx = new Uint32Array(g.position.array.length / 3);
@@ -149,10 +155,10 @@ var width, height;
                 };
 
                 // CHECKITOUT: load textures
-                loadTexture('objs/sponza/color.jpg').then(function(tex) {
+                loadTexture('models/sponza/color.jpg').then(function(tex) {
                     m.colmap = tex;
                 });
-                loadTexture('objs/sponza/normal.png').then(function(tex) {
+                loadTexture('models/sponza/normal.png').then(function(tex) {
                     m.normap = tex;
                 });
 

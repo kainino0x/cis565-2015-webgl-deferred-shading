@@ -3,9 +3,10 @@
 precision highp float;
 precision highp int;
 
+#define NUM_GBUFFERS 4
+
 void main() {
-    gl_FragData[0] = vec4(0.0);
-    gl_FragData[1] = vec4(0.0);
-    gl_FragData[2] = vec4(0.0);
-    gl_FragData[3] = vec4(0.0);
+    for (int i = 0; i < NUM_GBUFFERS; i++) {
+        gl_FragData[i] = vec4(0.0);
+    }
 }
