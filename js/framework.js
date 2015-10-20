@@ -17,7 +17,7 @@ var width, height;
             cameraMat: cameraMat.elements,
             models: models
         });
-    }
+    };
 
     var update = function() {
         controls.update();

@@ -177,8 +177,6 @@
     };
 
     var renderFullScreenQuad = (function() {
-        'use strict';
-
         // The variables in this function are private to the implementation of
         // renderFullScreenQuad. They work like static local variables in C++.
 

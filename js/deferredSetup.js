@@ -181,7 +181,6 @@
     };
 
     var createAndBindDepthTargetTexture = function(fbo) {
-        'use strict';
         var depthTex = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, depthTex);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
@@ -201,7 +200,6 @@
     };
 
     var createAndBindColorTargetTexture = function(fbo, attachment) {
-        'use strict';
         var tex = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, tex);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
