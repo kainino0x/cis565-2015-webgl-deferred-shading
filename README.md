@@ -69,8 +69,7 @@ You will need to implement the following features:
   * See: `copy.frag.glsl`, `deferred/*.glsl`, 
 * Scissor test optimization: when accumulating shading from each point
   light source, only render in a rectangle around the light.
-  * Show a debug view for this (showing scissors with some blending)
-  **INSTRUCTOR TODO:** provide code for computing the NDC AABB for a sphere
+  * Show a debug view for this (showing scissor masks clearly)
 
 You must do at least **8 points** worth of extra features.
 
@@ -135,7 +134,8 @@ following brief analysis:
 
 You'll be working in `deferredSetup.js` and `deferredRender.js` using raw
 WebGL. While there is Three.js code in the project for other purposes, you
-probably won't find it useful for implementing your pipeline.
+probably won't find it very useful. However, you may use its vector/matrix
+math types if you need them.
 
 It's highly recommended that you use the browser debugger to inspect variables
 to get familiar with the code. At any point, you can `console.log(some_var);`

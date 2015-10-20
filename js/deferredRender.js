@@ -15,6 +15,7 @@
 
         // Move the R.lights
         for (var i = 0; i < R.lights.length; i++) {
+            // TODO: Edit if you want to change how lights move
             var mn = R.light_min[1];
             var mx = R.light_max[1];
             R.lights[i].pos[1] = (R.lights[i].pos[1] + R.light_dt - mn + mx) % mx + mn;
@@ -29,13 +30,13 @@
         if (cfg && cfg.debugView >= 0) {
             // Do a debug render instead of a regular render
             // Don't do any post-processing in debug mode
-            R.pass_debug.render();
+            R.pass_debug.render(state);
         } else {
             // * Deferred pass and postprocessing pass(es)
             /* TODO: uncomment these
             // INSTRUCTOR TODO: remove this line */
-            R.pass_deferred.render();
-            R.pass_post1.render();
+            R.pass_deferred.render(state);
+            R.pass_post1.render(state);
             // */
 
             // TODO: call more postprocessing passes, if any
@@ -57,8 +58,10 @@
 
         // * "Use" the program R.progCopy.prog
         /**/ gl.useProgram(R.progCopy.prog);
-        // * Upload the camera matrix using gl.uniformMatrix4fv
-        /**/ gl.uniformMatrix4fv(R.progCopy.u_cameraMat, false, state.cameraMat);
+        // * Upload the camera matrix m to the uniform
+        //   R.progCopy.u_cameraMat using gl.uniformMatrix4fv
+        var m = state.cameraMat.elements;
+        /**/ gl.uniformMatrix4fv(R.progCopy.u_cameraMat, false, m);
 
         // * Draw the scene
         drawScene(state);
@@ -67,6 +70,9 @@
     var drawScene = function(state) {
         for (var i = 0; i < state.models.length; i++) {
             var m = state.models[i];
+            if (R.sphereModel) {
+                m = R.sphereModel;
+            }
             // If you want to render one model many times, note:
             // readyModelForDraw only needs to be called once.
             readyModelForDraw(R.progCopy, m);
@@ -75,7 +81,7 @@
         }
     };
 
-    R.pass_debug.render = function() {
+    R.pass_debug.render = function(state) {
         // * Unbind any framebuffer, so we can write to the screen
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
@@ -91,7 +97,7 @@
     /**
      * 'deferred' pass: Add lighting results for each individual light
      */
-    R.pass_deferred.render = function() {
+    R.pass_deferred.render = function(state) {
         // * Bind R.pass_deferred.fbo to write into for later postprocessing
         gl.bindFramebuffer(gl.FRAMEBUFFER, R.pass_deferred.fbo);
 
@@ -117,16 +123,20 @@
         // This is run once for each of the point lights
         bindTexturesForLightPass(R.prog_BlinnPhong_PointLight);
         for (var i = 0; i < R.lights.length; i++) {
-            // TODO: Edit if you want to change how lights move
-            var lightPos = R.lights[i].pos;
-            var lightCol = R.lights[i].col;
-            var lightRad = R.lights[i].rad;
+            var l = R.lights[i];
+            var lightPos = l.pos;
+            var lightCol = l.col;
+            var lightRad = l.rad;
             // * Set uniforms R.prog_BlinnPhong_PointLight.u_lightPos/Col/Rad
             /**/ gl.uniform3fv(R.prog_BlinnPhong_PointLight.u_lightPos, lightPos);
             /**/ gl.uniform3fv(R.prog_BlinnPhong_PointLight.u_lightCol, lightCol);
             /**/ gl.uniform1f(R.prog_BlinnPhong_PointLight.u_lightRad, lightRad);
 
             // TODO: Scissor test optimization
+            // Enable gl.SCISSOR_TEST, render, then disable.
+            // getScissorForLight returns null if the scissor is off the screen.
+            // Otherwise, it returns an array [xmin, ymin, width, height].
+            //var sc = getScissorForLight(state.viewMat, state.projMat, l);
 
             renderFullScreenQuad(R.prog_BlinnPhong_PointLight);
         }
@@ -153,7 +163,7 @@
     /**
      * 'post1' pass: Perform (first) pass of post-processing
      */
-    R.pass_post1.render = function() {
+    R.pass_post1.render = function(state) {
         // * Unbind any existing framebuffer
         /**/ gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 

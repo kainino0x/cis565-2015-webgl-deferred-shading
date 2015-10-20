@@ -24,7 +24,7 @@
     R.light_max = [6, 18, 14];
     R.light_dt = -0.1;
     R.LIGHT_RADIUS = 4.0;
-    R.NUM_LIGHTS = 20;
+    R.NUM_LIGHTS = 20; // TODO: test with MORE lights!
     var setupLights = function() {
 
         var posfn = function() {

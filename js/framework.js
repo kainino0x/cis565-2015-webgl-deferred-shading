@@ -14,7 +14,9 @@ var width, height;
         camera.matrixWorldInverse.getInverse(camera.matrixWorld);
         cameraMat.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
         R.deferredRender({
-            cameraMat: cameraMat.elements,
+            cameraMat: cameraMat,
+            projMat: camera.projectionMatrix,
+            viewMat: camera.matrixWorldInverse,
             models: models
         });
     };
@@ -112,53 +114,17 @@ var width, height;
         controls.zoomSpeed = 1.0;
         controls.panSpeed = 2.0;
 
+        // Add sphere geometry to the scene so it gets initialized
+        var sph = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6));
+        scene.add(sph);
+        uploadModel(sph, function(m) {
+            R.sphereModel = m;
+        });
+
         // CHECKITOUT: Load mesh and textures
         loadModel('models/sponza/sponza.obj', function(o) {
             scene.add(o);
-            for (var i = 0; i < o.children.length; i++) {
-                var c = o.children[i];
-                var g = c.geometry.attributes;
-                var idx = c.geometry.index;
-
-                var gposition = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, gposition);
-                gl.bufferData(gl.ARRAY_BUFFER, g.position.array, gl.STATIC_DRAW);
-
-                var gnormal;
-                if (g.normal && g.normal.array) {
-                    gnormal = gl.createBuffer();
-                    gl.bindBuffer(gl.ARRAY_BUFFER, gnormal);
-                    gl.bufferData(gl.ARRAY_BUFFER, g.normal.array, gl.STATIC_DRAW);
-                }
-
-                var guv;
-                if (g.uv && g.uv.array) {
-                    guv = gl.createBuffer();
-                    gl.bindBuffer(gl.ARRAY_BUFFER, guv);
-                    gl.bufferData(gl.ARRAY_BUFFER, g.uv.array, gl.STATIC_DRAW);
-                }
-
-                if (!idx) {
-                    idx = new Uint32Array(g.position.array.length / 3);
-                    for (var j = 0; j < idx.length; j++) {
-                        idx[j] = j;
-                    }
-                }
-
-                var gidx = gl.createBuffer();
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gidx);
-                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
-
-                var m = {
-                    idx: gidx,
-                    elemCount: idx.length,
-                    position: gposition,
-                    normal: gnormal,
-                    uv: guv,
-                    colmap: null,
-                    normap: null
-                };
-
+            uploadModel(o, function(m) {
                 // CHECKITOUT: load textures
                 loadTexture('models/sponza/color.jpg').then(function(tex) {
                     m.colmap = tex;
@@ -166,9 +132,8 @@ var width, height;
                 loadTexture('models/sponza/normal.png').then(function(tex) {
                     m.normap = tex;
                 });
-
                 models.push(m);
-            }
+            });
         });
 
         // Render once to get three.js to copy all of the model buffers
@@ -178,6 +143,55 @@ var width, height;
         R.deferredSetup();
 
         requestAnimationFrame(update);
+    };
+
+    var uploadModel = function(o, callback) {
+        for (var i = 0; i < o.children.length; i++) {
+            var c = o.children[i];
+            var g = c.geometry.attributes;
+            var idx = c.geometry.index;
+
+            var gposition = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, gposition);
+            gl.bufferData(gl.ARRAY_BUFFER, g.position.array, gl.STATIC_DRAW);
+
+            var gnormal;
+            if (g.normal && g.normal.array) {
+                gnormal = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, gnormal);
+                gl.bufferData(gl.ARRAY_BUFFER, g.normal.array, gl.STATIC_DRAW);
+            }
+
+            var guv;
+            if (g.uv && g.uv.array) {
+                guv = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, guv);
+                gl.bufferData(gl.ARRAY_BUFFER, g.uv.array, gl.STATIC_DRAW);
+            }
+
+            if (!idx) {
+                idx = new Uint32Array(g.position.array.length / 3);
+                for (var j = 0; j < idx.length; j++) {
+                    idx[j] = j;
+                }
+            }
+
+            var gidx = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gidx);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+
+            var m = {
+                idx: gidx,
+                elemCount: idx.length,
+                position: gposition,
+                normal: gnormal,
+                uv: guv
+            };
+
+            if (callback) {
+                callback(m);
+            }
+        }
     };
 
     window.handle_load.push(init);

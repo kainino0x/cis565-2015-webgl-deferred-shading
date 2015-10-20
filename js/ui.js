@@ -6,6 +6,7 @@ var cfg;
     var Cfg = function() {
         // TODO: Define config fields and defaults here
         this.debugView = -1;
+        this.debugScissor = false
         this.enableEffect0 = false;
     };
 
@@ -23,6 +24,7 @@ var cfg;
             '4 Normal map':      4,
             '5 Surface normal':  5
         });
+        gui.add(cfg, 'debugScissor');
 
         var eff0 = gui.addFolder('EFFECT NAME HERE');
         eff0.add(cfg, 'enableEffect0');
