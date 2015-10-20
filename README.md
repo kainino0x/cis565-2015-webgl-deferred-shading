@@ -38,9 +38,13 @@ This project requires a WebGL-capable web browser with support for
 `WEBGL_draw_buffers`. You can check for support on
 [WebGL Report](http://webglreport.com/).
 
-Google Chrome works best on all platforms. If you have problems running the
-starter code, use Chrome or Chromium, and make sure you have updated your
+Google Chrome seems to work best on all platforms. If you have problems running
+the starter code, use Chrome or Chromium, and make sure you have updated your
 browser and video drivers.
+
+In Moore 100B/C, both Chrome and Firefox should work.
+
+See below for notes on profiling/debugging tools.
 
 ## Requirements
 
@@ -62,14 +66,20 @@ You will need to implement the following features:
   * e.g. pack values together, quantize values, use 2-component normals, etc.
   * For credit, you must compare the performance of each permutation you test
     while optimizing in a simple table.
+  * See: `copy.frag.glsl`, `deferred/*.glsl`, 
 * Scissor test optimization: when accumulating shading from each point
   light source, only render in a rectangle around the light.
+  * Show a debug view for this (showing scissors with some blending)
+  **INSTRUCTOR TODO:** provide code for computing the NDC AABB for a sphere
 
 You must do at least **8 points** worth of extra features.
 
 **INSTRUCTOR TODO:** review point values
 
 * (4pts) The effect you didn't choose above
+* (2pts) Include material properties (e.g. specular coefficient and exponents)
+  in g-buffers
+  * Render objects with different materials
 * (3pts) Screen-space ambient occlusion [2]
 * (4pts) Motion blur [3]
 * (3pts) Two-pass Gaussian blur using separable convolution (using a second
@@ -79,6 +89,7 @@ You must do at least **8 points** worth of extra features.
   * On the CPU, check which lights overlap which tiles. Then, render each tile
     just once for all lights (instead of once for each light), applying only
     the overlapping lights.
+  * Show a debug view for this (number of lights per tile)
 
 * (5pts) Deferred shading without multiple render targets (i.e. without
   WEBGL_draw_buffers).
@@ -91,9 +102,14 @@ You must do at least **8 points** worth of extra features.
   * (4pts) Instead of rendering a full-screen quad for every light, render some
     proxy geometry which covers the part of the screen affected by the light
     (e.g. a sphere, for an attenuated point light).
-  * (+3pts) To avoid lighting geometry far behind the light, use an
-    inverted depth test (`gl.depthFunc(gl.GREATER)`) with depth writing
-    disabled (`gl.depthMask`)
+  * (+3pts) To avoid lighting geometry far behind the light, render the proxy
+    geometry (e.g. sphere) using an inverted depth test
+    (`gl.depthFunc(gl.GREATER)`) with depth writing disabled (`gl.depthMask`).
+    This test will pass only for parts of the screen for which the backside of
+    the sphere appears behind parts of the scene.
+    * Note that the copy pass's depth buffer must be bound to the FBO during
+      this operation!
+  * Show a debug view for this (showing light proxies)
 
 * Compare performance to equivalently-lit forward-rendering:
   * (2pts) With no forward-rendering optimizations
@@ -124,6 +140,13 @@ probably won't find it useful for implementing your pipeline.
 It's highly recommended that you use the browser debugger to inspect variables
 to get familiar with the code. At any point, you can `console.log(some_var);`
 to show it in the console and inspect it.
+
+The setup in `deferredSetup` is already done for you - if you don't modify the
+setup. It is recommended that you review the comments to understand the
+process, BEFORE starting work in `deferredRender`.
+
+In `deferredRender`, start at the **START HERE!** comment.
+Your first goal should be to get the debug views working.
 
 * `js/`: JavaScript files for this project.
   * `main.js`: Handles initialization of other parts of the program.
@@ -161,6 +184,10 @@ to show it in the console and inspect it.
 ### The Deferred Shading Pipeline
 
 See the comments in `deferredSetup.js`/`deferredRender.js` for low-level guidance.
+
+In order to enable and disable effects using the GUI, upload a vec4 uniform
+where each component is an enable/disable flag. In JavaScript, the state of the
+UI is accessible anywhere as `cfg.enableEffect0`, etc.
 
 **Pass 1:** Renders the scene geometry and its properties to the g-buffers.
 * `copy.vert.glsl`, `copy.frag.glsl`
@@ -214,6 +241,24 @@ changes in a number of places:
   [GPU Gems 3, Ch. 27](http://http.developer.nvidia.com/GPUGems3/gpugems3_ch27.html)
 
 **Also see:** The articles linked in the course schedule.
+
+### Profiling and debugging tools
+
+Built into Firefox:
+* Canvas inspector
+* Shader Editor
+* JavaScript debugger and profiler
+
+Built into Chrome:
+* JavaScript debugger and profiler
+
+Plug-ins:
+* (Chrome/Firefox) [Web Tracing Framework](http://google.github.io/tracing-framework/)
+* (Chrome) [Shader Editor](https://chrome.google.com/webstore/detail/shader-editor/ggeaidddejpbakgafapihjbgdlbbbpob)
+
+
+Firefox can also be useful - it has a canvas inspector, WebGL profiling and a
+shader editor built in.
 
 
 ## README

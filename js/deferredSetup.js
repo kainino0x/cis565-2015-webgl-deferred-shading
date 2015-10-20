@@ -7,10 +7,6 @@
     R.pass_post1 = {};
     R.lights = [];
 
-    R.light_min = [-6, 0, -14];
-    R.light_max = [6, 18, 14];
-    R.light_dt = -0.1;
-    R.NUM_LIGHTS = 20;
     R.NUM_GBUFFERS = 4;
 
     /**
@@ -23,7 +19,14 @@
         R.pass_deferred.setup();
     };
 
+    // TODO: Edit if you want to change the light initial positions
+    R.light_min = [-6, 0, -14];
+    R.light_max = [6, 18, 14];
+    R.light_dt = -0.1;
+    R.LIGHT_RADIUS = 4.0;
+    R.NUM_LIGHTS = 20;
     var setupLights = function() {
+
         var posfn = function() {
             var r = [0, 0, 0];
             for (var i = 0; i < 3; i++) {
@@ -33,13 +36,15 @@
             }
             return r;
         };
+
         for (var i = 0; i < R.NUM_LIGHTS; i++) {
             R.lights.push({
                 pos: [posfn(), posfn(), posfn()],
                 col: [
                     1 + Math.random(),
                     1 + Math.random(),
-                    1 + Math.random()]
+                    1 + Math.random()],
+                rad: R.LIGHT_RADIUS
             });
         }
     };
@@ -121,6 +126,9 @@
 
         loadDeferredProgram('blinnphong-pointlight', function(p) {
             // Save the object into this variable for access later
+            p.u_lightPos = gl.getUniformLocation(p.prog, 'u_lightPos');
+            p.u_lightCol = gl.getUniformLocation(p.prog, 'u_lightCol');
+            p.u_lightRad = gl.getUniformLocation(p.prog, 'u_lightRad');
             R.prog_BlinnPhong_PointLight = p;
         });
 
@@ -147,8 +155,6 @@
                 var p = { prog: prog };
 
                 // Retrieve the uniform and attribute locations
-                p.u_lightCol = gl.getUniformLocation(prog, 'u_lightCol');
-                p.u_lightPos = gl.getUniformLocation(prog, 'u_lightPos');
                 p.u_gbufs = [];
                 for (var i = 0; i < R.NUM_GBUFFERS; i++) {
                     p.u_gbufs[i] = gl.getUniformLocation(prog, 'u_gbufs[' + i + ']');
@@ -172,5 +178,42 @@
 
                 callback(p);
             });
+    };
+
+    var createAndBindDepthTargetTexture = function(fbo) {
+        'use strict';
+        var depthTex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, depthTex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(
+            gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, width, height, 0,
+            gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.framebufferTexture2D(
+            gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthTex, 0);
+
+        return depthTex;
+    };
+
+    var createAndBindColorTargetTexture = function(fbo, attachment) {
+        'use strict';
+        var tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.FLOAT, null);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, attachment, gl.TEXTURE_2D, tex, 0);
+
+        return tex;
     };
 })();

@@ -6,6 +6,7 @@ precision highp int;
 
 uniform vec3 u_lightCol;
 uniform vec3 u_lightPos;
+uniform float u_lightRad;
 uniform sampler2D u_gbufs[NUM_GBUFFERS];
 uniform sampler2D u_depth;
 
@@ -21,7 +22,7 @@ vec3 applyNormalMap(vec3 geomnor, vec3 normap) {
 
 void main() {
     // Load properties from the g-buffers
-    // TODO: optimize g-buffers
+    // TODO: change for optimized g-buffers
     vec4 gb0 = texture2D(u_gbufs[0], v_uv);
     vec4 gb1 = texture2D(u_gbufs[1], v_uv);
     vec4 gb2 = texture2D(u_gbufs[2], v_uv);
@@ -39,13 +40,14 @@ void main() {
         return;
     }
 
-    gl_FragColor = vec4(0, 0, 1, 1);  // blue
-    // TODO
+    gl_FragColor = vec4(0, 0, 1, 1);  // TODO: replace this
 
     //diff += u_lightCol[i] * dot(nor, u_lightPos[i] - pos);
-    vec3 lightdiff = u_lightPos - pos;
-    float lightdist = length(lightdiff);
-    vec3 lightdir = lightdiff / lightdist;
-    vec3 diff = u_lightCol * max(0.0, dot(nor, lightdir)) * max(0.0, 4.0 - lightdist);
-    gl_FragColor = vec4(colmap * diff, 1.0);
+    /**/ vec3 lightdiff = u_lightPos - pos;
+    /**/ float lightdist = length(lightdiff);
+    /**/ vec3 lightdir = lightdiff / lightdist;
+    /**/ vec3 diff = u_lightCol
+    /**/     * max(0.0, dot(nor, lightdir))
+    /**/     * max(0.0, u_lightRad - lightdist);
+    /**/ gl_FragColor = vec4(colmap * diff, 1.0);
 }
