@@ -70,9 +70,7 @@
     var drawScene = function(state) {
         for (var i = 0; i < state.models.length; i++) {
             var m = state.models[i];
-            if (R.sphereModel) {
-                m = R.sphereModel;
-            }
+
             // If you want to render one model many times, note:
             // readyModelForDraw only needs to be called once.
             readyModelForDraw(R.progCopy, m);
@@ -121,6 +119,7 @@
 
         // * Bind/setup the Blinn-Phong pass, and render using fullscreen quad
         // This is run once for each of the point lights
+        /*DELETEME*/ gl.enable(gl.SCISSOR_TEST);
         bindTexturesForLightPass(R.prog_BlinnPhong_PointLight);
         for (var i = 0; i < R.lights.length; i++) {
             var l = R.lights[i];
@@ -138,8 +137,13 @@
             // Otherwise, it returns an array [xmin, ymin, width, height].
             //var sc = getScissorForLight(state.viewMat, state.projMat, l);
 
+            /*DELETEME*/ var sc = getScissorForLight(state.viewMat, state.projMat, l);
+            /*DELETEME*/ if (sc) {
+            /*DELETEME*/ gl.scissor(sc[0], sc[1], sc[2], sc[3]);
             renderFullScreenQuad(R.prog_BlinnPhong_PointLight);
+            /*DELETEME*/ }
         }
+        /*DELETEME*/ gl.disable(gl.SCISSOR_TEST);
 
         // Disable blending so that it doesn't affect other code
         gl.disable(gl.BLEND);

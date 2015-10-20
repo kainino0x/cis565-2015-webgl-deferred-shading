@@ -13,6 +13,12 @@ WebGL Deferred Shading
 
 ### (TODO: Your README)
 
+*DO NOT* leave the README to the last minute! It is a crucial part of the
+project, and we will not be able to grade you without a good README.
+
+This assignment has a considerable amount of performance analysis compared
+with implementation work. Complete the implementation early to leave time!
+
 
 Instructions (delete me)
 ========================
@@ -27,7 +33,7 @@ pipeline and various lighting and visual effects.
 Take screenshots as you go. Use them to document your progress in your README!
 
 Read (or at least skim) the full README before you begin, so that you know what
-to expect and 
+to expect and what to prepare for.
 
 ### Running the code
 
@@ -52,37 +58,44 @@ See below for notes on profiling/debugging tools.
 
 In this project, you are given code for:
 
-* Loading OBJ files and textures
+* Loading OBJ files and color/normal map textures
 * Camera control
-* Partial implementation of deferred shading
+* Partial implementation of deferred shading including many helper functions
 
-You will need to implement the following features:
+You will need to perform the following tasks:
 
-* Blinn-Phong shading (diffuse + specular)
-* One of the following effects:
-  * Bloom [1]
-  * Toon shading (with ramp shading + edge detection for outlines)
+* Implement deferred Blinn-Phong shading (diffuse + specular)
+* Implement one of the following effects:
+  * Bloom using post-process box or Gaussian blur [1]
+  * Toon shading (with ramp shading + simple edge detection for outlines)
 * Optimized g-buffer format
-  * e.g. pack values together, quantize values, use 2-component normals, etc.
+  * Ideas: pack values together, use 2-component normals,
+    quantize values using smaller texture types instead of gl.FLOAT, etc.
   * For credit, you must compare the performance of each permutation you test
-    while optimizing in a simple table.
-  * See: `copy.frag.glsl`, `deferred/*.glsl`, 
+    while optimizing, in a simple table.
+  * See mainly: `copy.frag.glsl`, `deferred/*.glsl`, `deferredSetup.js`
 * Scissor test optimization: when accumulating shading from each point
   light source, only render in a rectangle around the light.
   * Show a debug view for this (showing scissor masks clearly)
+  * Code is provided to compute this rectangle for you
 
 You must do at least **8 points** worth of extra features.
 
 **INSTRUCTOR TODO:** review point values
 
 * (4pts) The effect you didn't choose above
+
 * (2pts) Include material properties (e.g. specular coefficient and exponents)
   in g-buffers
-  * Render objects with different materials
+  * Use this to render objects with different material properties
+  * These may be uniform across one model draw call
+
 * (3pts) Screen-space ambient occlusion [2]
-* (4pts) Motion blur [3]
-* (3pts) Two-pass Gaussian blur using separable convolution (using a second
-  postprocess render pass) to improve bloom performance
+
+* (4pts) Screen-space 1D motion blur [3]
+
+* (3pts) Two-pass **Gaussian** blur using separable convolution (using a second
+  postprocess render pass) to improve bloom or other 2D blur performance
 
 * (6pts) Tile-based deferred shading with detailed performance comparison
   * On the CPU, check which lights overlap which tiles. Then, render each tile
@@ -90,18 +103,13 @@ You must do at least **8 points** worth of extra features.
     the overlapping lights.
   * Show a debug view for this (number of lights per tile)
 
-* (5pts) Deferred shading without multiple render targets (i.e. without
-  WEBGL_draw_buffers).
-  * Render the scene once for each target g-buffer, each time into a different
-    framebuffer object.
-  * Include a detailed performance analysis (for different models), comparing
-    with/without WEBGL_draw_buffers.
-
-* Light proxies
-  * (4pts) Instead of rendering a full-screen quad for every light, render some
+* (4pts) Light proxies
+  * Instead of rendering a full-screen quad for every light, render some
     proxy geometry which covers the part of the screen affected by the light
     (e.g. a sphere, for an attenuated point light).
-  * (+3pts) To avoid lighting geometry far behind the light, render the proxy
+    * A model called `sphereModel` is provided which can be drawn in the same
+      way as in `drawScene`.
+  * (+2pts) To avoid lighting geometry far behind the light, render the proxy
     geometry (e.g. sphere) using an inverted depth test
     (`gl.depthFunc(gl.GREATER)`) with depth writing disabled (`gl.depthMask`).
     This test will pass only for parts of the screen for which the backside of
@@ -109,6 +117,13 @@ You must do at least **8 points** worth of extra features.
     * Note that the copy pass's depth buffer must be bound to the FBO during
       this operation!
   * Show a debug view for this (showing light proxies)
+
+* (5pts) Deferred shading without multiple render targets (i.e. without
+  WEBGL_draw_buffers).
+  * Render the scene once for each target g-buffer, each time into a different
+    framebuffer object.
+  * Include a detailed performance analysis (for different models), comparing
+    with/without WEBGL_draw_buffers.
 
 * Compare performance to equivalently-lit forward-rendering:
   * (2pts) With no forward-rendering optimizations

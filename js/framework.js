@@ -117,6 +117,7 @@ var width, height;
         // Add sphere geometry to the scene so it gets initialized
         var sph = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6));
         scene.add(sph);
+        renderer.render(scene, camera);
         uploadModel(sph, function(m) {
             R.sphereModel = m;
         });
@@ -146,10 +147,20 @@ var width, height;
     };
 
     var uploadModel = function(o, callback) {
-        for (var i = 0; i < o.children.length; i++) {
-            var c = o.children[i];
-            var g = c.geometry.attributes;
-            var idx = c.geometry.index;
+        for (var i = -1; i < o.children.length; i++) {
+            var c, g, idx;
+            if (i < 0) {
+                c = o;
+                if (!c.geometry) {
+                    continue;
+                }
+                g = c.geometry._bufferGeometry.attributes;
+                idx = c.geometry._bufferGeometry.index;
+            } else {
+                c = o.children[i];
+                g = c.geometry.attributes;
+                idx = c.geometry.index;
+            }
 
             var gposition = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, gposition);
