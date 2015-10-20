@@ -22,10 +22,11 @@
     // TODO: Edit if you want to change the light initial positions
     R.light_min = [-6, 0, -14];
     R.light_max = [6, 18, 14];
-    R.light_dt = -0.1;
+    R.light_dt = -0.03;
     R.LIGHT_RADIUS = 4.0;
     R.NUM_LIGHTS = 20; // TODO: test with MORE lights!
     var setupLights = function() {
+        Math.seedrandom(0);
 
         var posfn = function() {
             var r = [0, 0, 0];

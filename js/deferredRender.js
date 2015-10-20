@@ -23,7 +23,8 @@
 
         // Execute deferred shading pipeline
 
-        // CHECKITOUT: START HERE!
+        // CHECKITOUT: START HERE! You can even uncomment this:
+        //debugger;
 
         R.pass_copy.render(state);
 
@@ -58,8 +59,8 @@
 
         // * "Use" the program R.progCopy.prog
         /**/ gl.useProgram(R.progCopy.prog);
-        // * Upload the camera matrix m to the uniform
-        //   R.progCopy.u_cameraMat using gl.uniformMatrix4fv
+        // * Upload the camera matrix m to the uniform R.progCopy.u_cameraMat
+        //   using gl.uniformMatrix4fv
         var m = state.cameraMat.elements;
         /**/ gl.uniformMatrix4fv(R.progCopy.u_cameraMat, false, m);
 
@@ -127,6 +128,7 @@
             var lightCol = l.col;
             var lightRad = l.rad;
             // * Set uniforms R.prog_BlinnPhong_PointLight.u_lightPos/Col/Rad
+            //   and any others you need
             /**/ gl.uniform3fv(R.prog_BlinnPhong_PointLight.u_lightPos, lightPos);
             /**/ gl.uniform3fv(R.prog_BlinnPhong_PointLight.u_lightCol, lightCol);
             /**/ gl.uniform1f(R.prog_BlinnPhong_PointLight.u_lightRad, lightRad);
@@ -168,12 +170,12 @@
      * 'post1' pass: Perform (first) pass of post-processing
      */
     R.pass_post1.render = function(state) {
-        // * Unbind any existing framebuffer
-        /**/ gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        // * Unbind any existing framebuffer (if there are no more passes)
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
         // * Clear the framebuffer depth to 1.0
-        /**/ gl.clearDepth(1.0);
-        /**/ gl.clear(gl.DEPTH_BUFFER_BIT);
+        gl.clearDepth(1.0);
+        gl.clear(gl.DEPTH_BUFFER_BIT);
 
         // * Bind the postprocessing shader program
         gl.useProgram(R.progPost1.prog);
@@ -198,9 +200,12 @@
         // You can render in normalized device coordinates (NDC) so that the
         // vertex shader doesn't have to do any transformation; draw two
         // triangles which cover the screen over x = -1..1 and y = -1..1.
-        // You can set this up to use either gl.TRIANGLE_STRIP or gl.TRIANGLES.
+        // This array is set up to use gl.drawArrays with gl.TRIANGLE_STRIP.
         var positions = new Float32Array([
-            /**/ -1.0, -1.0, 0.0, 1.0, -1.0, 0.0, -1.0, 1.0, 0.0, 1.0, 1.0, 0.0
+            -1.0, -1.0, 0.0,
+             1.0, -1.0, 0.0,
+            -1.0,  1.0, 0.0,
+             1.0,  1.0, 0.0
         ]);
 
         var vbo = null;

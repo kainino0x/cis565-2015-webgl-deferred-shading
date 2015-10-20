@@ -11,13 +11,17 @@ WebGL Deferred Shading
 
 [![](img/thumb.png)](http://TODO.github.io/Project6-WebGL-Deferred-Shading)
 
+### Demo Video
+
+[![](img/video.png)](TODO)
+
 ### (TODO: Your README)
 
 *DO NOT* leave the README to the last minute! It is a crucial part of the
 project, and we will not be able to grade you without a good README.
 
 This assignment has a considerable amount of performance analysis compared
-with implementation work. Complete the implementation early to leave time!
+to implementation work. Complete the implementation early to leave time!
 
 
 Instructions (delete me)
@@ -62,6 +66,8 @@ In this project, you are given code for:
 * Camera control
 * Partial implementation of deferred shading including many helper functions
 
+### Required Tasks
+
 You will need to perform the following tasks:
 
 * Implement deferred Blinn-Phong shading (diffuse + specular)
@@ -78,6 +84,8 @@ You will need to perform the following tasks:
   light source, only render in a rectangle around the light.
   * Show a debug view for this (showing scissor masks clearly)
   * Code is provided to compute this rectangle for you
+
+### Extra Tasks
 
 You must do at least **8 points** worth of extra features.
 
@@ -135,29 +143,55 @@ This extra feature list is not comprehensive. If you have a particular idea
 that you would like to implement, please **contact us first** (preferably on
 the mailing list).
 
-**All togglable features should be switchable using the GUI panel.**
+**Where possible, all features should be switchable using the GUI panel.**
 
-**IMPORTANT:** For each feature (required or extra), please provide the
-following brief analysis:
+### Performance & Analysis
+
+ Optimize your JavaScript and/or GLSL code. Web Tracing Framework
+and Chrome/Firefox's profiling tools will be useful for this. For each change
+that improves performance, show the before and after render times.
+
+For each new *effect* feature (required or extra), please
+provide the following brief analysis:
 
 * Concise overview write-up of the feature.
-* Performance hit/improvement due to adding the feature.
+* Performance change due to adding the feature.
+  * If applicable, how do parameters (such as number of lights, tile size,
+    etc.) affect performance?
 * If you did something to accelerate the feature, what did you do and why?
 * How might this feature be optimized beyond your current implementation?
 
+For each *performance* feature (required or extra), please provide:
+
+* Concise overview write-up of the feature.
+* Detailed performance improvement analysis of adding the feature
+  * What is the best case scenario for your performance improvement? What is
+    the worst?
+  * Are there tradeoffs to this performance feature?
+  * How do parameters (such as number of lights, tile size, etc.) affect
+    performance?
+  * Show debug views when possible.
+    * If the debug view correlates with performance, explain how.
+
+**Notes:**
+
+* Before doing performance analysis, you must disable debug mode by changing
+`debugMode` to `false` in `framework.js`.
+* Be aware that stats.js may give 0 millisecond frame timings in Chrome on
+occasion - if this happens, you can use the FPS counter.
+
 ### Starter Code Tour
 
-You'll be working in `deferredSetup.js` and `deferredRender.js` using raw
-WebGL. While there is Three.js code in the project for other purposes, you
-probably won't find it very useful. However, you may use its vector/matrix
-math types if you need them.
+You'll be working mainly in `deferredRender.js` using raw WebGL. Three.js is
+included in the project for various reasons. You won't use it for much, but its
+matrix/vector types may come in handy.
 
 It's highly recommended that you use the browser debugger to inspect variables
-to get familiar with the code. At any point, you can `console.log(some_var);`
-to show it in the console and inspect it.
+to get familiar with the code. At any point, you can also
+`console.log(some_var);` to show it in the console and inspect it.
 
-The setup in `deferredSetup` is already done for you - if you don't modify the
-setup. It is recommended that you review the comments to understand the
+The setup in `deferredSetup` is already done for you, for many of the features.
+It is recommended that you review the comments to understand the
 process, BEFORE starting work in `deferredRender`.
 
 In `deferredRender`, start at the **START HERE!** comment.
@@ -290,20 +324,7 @@ Replace the contents of this README.md in a clear manner with the following:
 
 ### Performance Analysis
 
-Analyze the performance on any features or optimizations that you implemented.
-What are the gains? What are the losses? Are there tradeoffs? How do parameters
-(such as number of lights, tile size, etc.) affect performance?
-
-**Required:** Optimize your JavaScript and/or GLSL code. Web Tracing Framework
-and Chrome/Firefox's profiling tools will be useful for this. For each change
-that improves performance, show the before and after render times.
-
-**Notes:**
-
-* Before doing performance analysis, you must disable debug mode by changing
-`debugMode` to `false` in `framework.js`.
-* Be aware that stats.js may give 0 millisecond frame timings in Chrome on
-occasion - if this happens, you can use the FPS counter.
+See above.
 
 ### GitHub Pages
 
@@ -319,7 +340,7 @@ Push the branch to GitHub:
 `git push origin gh-pages`
 
 Now, you can go to `<user_name>.github.io/<project_name>` to see your
-renderer online from anywhere.
+renderer online from anywhere. Add this link to your README.
 
 ## Submit
 
