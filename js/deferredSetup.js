@@ -20,11 +20,11 @@
     };
 
     // TODO: Edit if you want to change the light initial positions
-    R.light_min = [-6, 0, -14];
-    R.light_max = [6, 18, 14];
+    R.light_min = [-14, 0, -6];
+    R.light_max = [14, 18, 6];
     R.light_dt = -0.03;
-    R.LIGHT_RADIUS = 4.0;
-    R.NUM_LIGHTS = 20; // TODO: test with MORE lights!
+    R.LIGHT_RADIUS = 3.0;
+    R.NUM_LIGHTS = 50; // TODO: test with MORE lights!
     var setupLights = function() {
         Math.seedrandom(0);
 
@@ -33,14 +33,14 @@
             for (var i = 0; i < 3; i++) {
                 var mn = R.light_min[i];
                 var mx = R.light_max[i];
-                r = Math.random() * (mx - mn) + mn;
+                r[i] = Math.random() * (mx - mn) + mn;
             }
             return r;
         };
 
         for (var i = 0; i < R.NUM_LIGHTS; i++) {
             R.lights.push({
-                pos: [posfn(), posfn(), posfn()],
+                pos: posfn(),
                 col: [
                     1 + Math.random(),
                     1 + Math.random(),
@@ -112,6 +112,12 @@
 
                 // Save the object into this variable for access later
                 R.progCopy = p;
+            });
+
+        loadShaderProgram(gl, 'glsl/quad.vert.glsl', 'glsl/red.frag.glsl',
+            function(prog) {
+                // Create an object to hold info about this shader program
+                R.progRed = { prog: prog };
             });
 
         loadShaderProgram(gl, 'glsl/quad.vert.glsl', 'glsl/clear.frag.glsl',

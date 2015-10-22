@@ -5,6 +5,7 @@
     R.deferredRender = function(state) {
         if (!aborted && (
             !R.progClear ||
+            !R.progRed ||
             !R.prog_Ambient ||
             !R.prog_BlinnPhong_PointLight ||
             !R.prog_Debug ||
@@ -142,7 +143,11 @@
             /*DELETEME*/ var sc = getScissorForLight(state.viewMat, state.projMat, l);
             /*DELETEME*/ if (sc) {
             /*DELETEME*/ gl.scissor(sc[0], sc[1], sc[2], sc[3]);
+            /*DELETEME*/ if (cfg.debugScissor) {
+            /*DELETEME*/     renderFullScreenQuad(R.progRed);
+            /*DELETEME*/ } else {
             renderFullScreenQuad(R.prog_BlinnPhong_PointLight);
+            /*DELETEME*/ }
             /*DELETEME*/ }
         }
         /*DELETEME*/ gl.disable(gl.SCISSOR_TEST);
