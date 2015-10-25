@@ -66,6 +66,9 @@ var width, height;
     };
 
     var init = function() {
+        // TODO: For performance measurements, disable debug mode!
+        var debugMode = true;
+
         canvas = document.getElementById('canvas');
         renderer = new THREE.WebGLRenderer({
             canvas: canvas,
@@ -73,10 +76,8 @@ var width, height;
         });
         gl = renderer.context;
 
-        // TODO: For performance measurements, disable debug mode!
-        var debugMode = false;
-
         if (debugMode) {
+            $('#dlbutton button').attr('disabled', false);
             $('#debugmodewarning').css('display', 'block');
             var throwOnGLError = function(err, funcName, args) {
                 abort(WebGLDebugUtils.glEnumToString(err) +
