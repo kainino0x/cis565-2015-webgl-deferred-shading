@@ -24,10 +24,9 @@ var width, height;
 
     var update = function() {
         controls.update();
+        stats.end();
         stats.begin();
         render();
-        gl.finish();
-        stats.end();
         if (!aborted) {
             requestAnimationFrame(update);
         }
@@ -68,7 +67,7 @@ var width, height;
 
     var init = function() {
         // TODO: For performance measurements, disable debug mode!
-        var debugMode = true;
+        var debugMode = false;
 
         canvas = document.getElementById('canvas');
         renderer = new THREE.WebGLRenderer({
@@ -90,7 +89,7 @@ var width, height;
         initExtensions();
 
         stats = new Stats();
-        stats.setMode(0); // 0: fps, 1: ms, 2: mb
+        stats.setMode(1); // 0: fps, 1: ms, 2: mb
         stats.domElement.style.position = 'absolute';
         stats.domElement.style.left = '0px';
         stats.domElement.style.top = '0px';
