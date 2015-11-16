@@ -1,15 +1,23 @@
 WebGL Deferred Shading
 ======================
 
+**This project was created as an assignment for CIS 565. It is a reference
+solution implementing the basic features. The assignment below
+is approximately as it was assigned in the course.**
+
+### Live Online
+
+[![](img/thumb.png)](http://kainino0x.github.io/cis565-2015-webgl-deferred-shading/)
+
+
+## Assignment Text
+
 **University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 6**
 
 * (TODO) YOUR NAME HERE
 * Tested on: (TODO) **Google Chrome 222.2** on
   Windows 22, i7-2222 @ 2.22GHz 22GB, GTX 222 222MB (Moore 2222 Lab)
 
-### Live Online
-
-[![](img/thumb.png)](http://TODO.github.io/Project6-WebGL-Deferred-Shading)
 
 ### Demo Video
 
