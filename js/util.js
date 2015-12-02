@@ -72,7 +72,10 @@ window.loadShaderProgram = (function() {
                 var vs = results[0], fs = results[1];
                 vs = compileShader(gl, vs, gl.VERTEX_SHADER);
                 fs = compileShader(gl, fs, gl.FRAGMENT_SHADER);
-                return linkShader(gl, vs, fs);
+                var prog = linkShader(gl, vs, fs);
+                gl.deleteShader(vs);
+                gl.deleteShader(fs);
+                return prog;
             }).then(callback).catch(abort);
     };
 })();
